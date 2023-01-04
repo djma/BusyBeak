@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "The Receipts",
+  "version": "1.0",
+
+  "description": "Remember what you see. Always bring receipts.",
+
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.mozilla.org/*",
+        "*://*.twitter.com/*"
+      ],
+      "js": ["content_scripts.js"]
+    }
+  ]
+}

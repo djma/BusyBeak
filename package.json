@@ -18,5 +18,8 @@
   "homepage": "https://github.com/djma/the-receipts#readme",
   "devDependencies": {
     "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "webextension-polyfill-ts": "^0.26.0"
   }
 }

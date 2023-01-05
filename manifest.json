@@ -9,13 +9,17 @@
     "48": "icons/border-48.png"
   },
 
+  "permissions": [
+    "https://api.openai.com/*",
+    "https://*.pinecone.io/*"
+  ],
+
   "content_scripts": [
     {
       "matches": [
-        "*://*.mozilla.org/*",
         "*://*.twitter.com/*"
       ],
-      "js": ["content_scripts.js"]
+      "js": ["dist/content_scripts.js"]
     }
   ]
 }

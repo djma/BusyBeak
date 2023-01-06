@@ -64,7 +64,7 @@ interface ClosestTweets {
 async function handleMutation(mutation: MutationRecord) {
   if (mutation.addedNodes.length > 0) {
     for (const node of mutation.addedNodes) {
-      if (window.location.href.match(/twitter\.com\/\w+\/status\/\d+/)) {
+      if (window.location.href.match(/twitter\.com\/\w+\/status\/\d+$/)) {
         const topLevelTweet = node.ownerDocument?.querySelector(
           `article[data-testid="tweet"][tabIndex="-1"]`
         );
@@ -100,8 +100,10 @@ async function handleMutation(mutation: MutationRecord) {
             ).then((response) => response.json());
 
             console.log(
-              "closest tweet: ",
-              `https://twitter.com/t/status/${closestTweets.matches[1].id}`
+              "closest tweet:",
+              `https://twitter.com/t/status/${closestTweets.matches[1].id}`,
+              "score:",
+              closestTweets.matches[1].score
             ); // first one is the tweet itself
           }
         }

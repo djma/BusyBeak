@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "build": "npm run build-b && npm run build-c",
-    "build:watch": "esbuild --watch src/background.ts src/content_scripts.ts --bundle --outdir=dist --platform=browser",
+    "build:watch": "esbuild --watch src/background.ts src/content_scripts.ts src/popup.tsx --bundle --outdir=dist --platform=browser",
     "build-b": "esbuild src/background.ts --bundle --outdir=dist --platform=browser",
     "build-c": "esbuild src/content_scripts.ts --bundle --outdir=dist --platform=browser"
   },
@@ -14,10 +14,13 @@
   "bugs": "https://github.com/djma/the-receipts/issues",
   "homepage": "https://github.com/djma/the-receipts#readme",
   "devDependencies": {
+    "@types/react-dom": "^18.0.10",
     "esbuild": "^0.16.14",
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "webextension-polyfill-ts": "^0.26.0"
   }
 }

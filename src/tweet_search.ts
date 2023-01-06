@@ -34,38 +34,6 @@ export async function getTweetEmbedding(
   return respJson as EmbeddingResponse;
 }
 
-/** A list of tweets closest to a given vector. */
-interface ClosestTweets {
-  matches: {
-    id: string;
-    score: number;
-    values?: number[];
-  }[];
-  namespace: string;
-}
-
-export async function findClosestTweet(embedding: number[]) {
-  const closestTweets: ClosestTweets = await fetch(
-    `${PINECONE_BASE_URL}/query`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Api-Key": PINECONE_KEY,
-      },
-      body: JSON.stringify({
-        vector: embedding,
-        topK: 2, // first one is the tweet itself
-        includeValues: false,
-      }),
-    }
-  ).then((response) => response.json());
-
-  console.log("closest tweets: ", closestTweets);
-
-  return closestTweets.matches[1].id;
-}
-
 export async function saveTweetEmbed({
   tweetUrl,
   tweetId,
@@ -76,6 +44,7 @@ export async function saveTweetEmbed({
   tweetText?: string | null;
 }) {
   tweetId = tweetId || tweetUrl!.split("/").slice(-1)[0];
+
   const storedEmbedding: {
     vectors: Record<string, { id: string; values: number[] }>;
   } = await fetch(`${PINECONE_BASE_URL}/vectors/fetch?ids=${tweetId}`, {

@@ -1,4 +1,5 @@
-import { findClosestTweet, saveTweetEmbed } from "tweet_search";
+import { saveTweetEmbed } from "tweet_search";
+import { findClosest } from "vector_search";
 import { browser } from "webextension-polyfill-ts";
 
 console.log("Background hello world");
@@ -20,11 +21,13 @@ browser.runtime.onMessage.addListener(async (message) => {
         console.log(
           "Looking up closest tweet, len(embedding) = " + embedding.length
         );
-        const id = await findClosestTweet(embedding);
-        console.log(`Closest tweet: https://twitter.com/t/status/${id}`);
+        const vec = await findClosest(embedding);
+        console.log(`Closest tweet: https://twitter.com/t/status/${vec.id}`);
+        console.log(`Score        : ${vec.score}`);
         break;
 
       default:
+        console.error("Unknown message type: ", type);
     }
   } catch (e) {
     console.error(e);

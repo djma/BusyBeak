@@ -2,21 +2,18 @@
   "name": "the-receipts",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/djma/the-receipts.git"
+    "build": "npm run build-b && npm run build-c",
+    "build-b": "esbuild src/background.ts --bundle --outdir=dist --platform=browser",
+    "build-c": "esbuild src/content_scripts.ts --bundle --outdir=dist --platform=browser"
   },
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/djma/the-receipts/issues"
-  },
+  "license": "UNLICENSED",
+  "repository": "https://github.com/djma/the-receipts",
+  "bugs": "https://github.com/djma/the-receipts/issues",
   "homepage": "https://github.com/djma/the-receipts#readme",
   "devDependencies": {
+    "esbuild": "^0.16.14",
     "typescript": "^4.9.4"
   },
   "dependencies": {

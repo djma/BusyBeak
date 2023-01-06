@@ -1,24 +1,21 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "The Receipts",
   "version": "1.0",
-
   "description": "Remember what you see. Always bring receipts.",
 
   "icons": {
     "48": "icons/border-48.png"
   },
 
-  "permissions": [
-    "https://api.openai.com/*",
-    "https://*.pinecone.io/*"
-  ],
+  "host_permissions": ["https://api.openai.com/*", "https://*.pinecone.io/*"],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
 
   "content_scripts": [
     {
-      "matches": [
-        "*://*.twitter.com/*"
-      ],
+      "matches": ["*://*.twitter.com/*"],
       "js": ["dist/content_scripts.js"]
     }
   ]

@@ -76,18 +76,18 @@ export async function saveTweetEmbed({
   tweetText?: string | null;
 }) {
   tweetId = tweetId || tweetUrl!.split("/").slice(-1)[0];
-  // const storedEmbedding: {
-  //   vectors: Record<string, { id: string; values: number[] }>;
-  // } = await fetch(`${PINECONE_BASE_URL}/vectors/fetch?ids=${tweetId}`, {
-  //   method: "GET",
-  //   headers: {
-  //     "Api-Key": PINECONE_KEY,
-  //   },
-  // }).then((response) => response.json());
-  // if (tweetId in storedEmbedding.vectors) {
-  //   console.log("Already have embedding for tweet: ", tweetUrl);
-  //   return storedEmbedding.vectors[tweetId].values;
-  // }
+  const storedEmbedding: {
+    vectors: Record<string, { id: string; values: number[] }>;
+  } = await fetch(`${PINECONE_BASE_URL}/vectors/fetch?ids=${tweetId}`, {
+    method: "GET",
+    headers: {
+      "Api-Key": PINECONE_KEY,
+    },
+  }).then((response) => response.json());
+  if (tweetId in storedEmbedding.vectors) {
+    console.log("Already have embedding for tweet: ", tweetUrl);
+    return storedEmbedding.vectors[tweetId].values;
+  }
 
   const embeddingResp = await getTweetEmbedding(tweetText!);
   const embedding = embeddingResp.data[0].embedding;

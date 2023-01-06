@@ -12,6 +12,7 @@ browser.runtime.onMessage.addListener(async (message) => {
       case "save":
         console.log("Saving tweet: ", tweetUrl);
         await saveTweetEmbed({ tweetUrl, tweetText });
+        break;
 
       case "search":
         console.log("Saving top tweet tweet: ", tweetUrl);
@@ -21,6 +22,9 @@ browser.runtime.onMessage.addListener(async (message) => {
         );
         const id = await findClosestTweet(embedding);
         console.log(`Closest tweet: https://twitter.com/t/status/${id}`);
+        break;
+
+      default:
     }
   } catch (e) {
     console.error(e);

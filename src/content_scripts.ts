@@ -2,14 +2,13 @@ import { browser } from "webextension-polyfill-ts";
 
 console.log("Hello from content script");
 
-const debouncer: Map<string, Date> = new Map();
-
+// Save tweets as we scroll the timeline
+const savedTweetIds = new Set<string>();
 const observer = new MutationObserver(async (mutations) => {
   for (const mutation of mutations) {
     await handleMutation(mutation);
   }
 });
-
 observer.observe(document.body, {
   childList: true,
   subtree: true,
@@ -17,74 +16,52 @@ observer.observe(document.body, {
   characterData: true,
 });
 
+// Whenever we navigate to a specific tweet, show similar tweets
+handleNavigate();
+window.addEventListener("popstate", handleNavigate);
+
+async function handleNavigate() {
+  const { href } = window.location;
+  console.log(`Navigated to ${href}`);
+
+  if (!href.match(/twitter\.com\/\w+\/status\/\d+$/)) return;
+  const topLevelTweet = document.querySelector(
+    `article[data-testid="tweet"][tabIndex="-1"]`
+  );
+  if (topLevelTweet == null) return;
+  const tweetText = topLevelTweet.querySelector(
+    '[data-testid="tweetText"]'
+  )?.textContent;
+
+  console.log(`Top tweet text: ${tweetText}`);
+  const tweetUrl = window.location.href;
+  browser.runtime.sendMessage({ type: "search", tweetText, tweetUrl });
+}
+
 async function handleMutation(mutation: MutationRecord) {
-  if (mutation.addedNodes.length > 0) {
-    for (const node of mutation.addedNodes) {
-      if (window.location.href.match(/twitter\.com\/\w+\/status\/\d+$/)) {
-        const topLevelTweet = node.ownerDocument?.querySelector(
-          `article[data-testid="tweet"][tabIndex="-1"]`
-        );
-        if (topLevelTweet) {
-          if (
-            debouncer.get(window.location.href) == null ||
-            debouncer.get(window.location.href)! < new Date()
-          ) {
-            debouncer.set(window.location.href, new Date(Date.now() + 1000));
+  if (mutation.addedNodes.length === 0) return;
+  const tweets =
+    document.querySelectorAll('article[data-testid="tweet"]') || [];
 
-            const tweetText = topLevelTweet.querySelector(
-              '[data-testid="tweetText'
-            )?.textContent;
+  for (const tweet of tweets) {
+    const tweetText = tweet.querySelector(
+      '[data-testid="tweetText"]'
+    )?.textContent;
 
-            console.log("TOP TWEET TEXT: ", tweetText);
-            const tweetUrl = window.location.href;
-            browser.runtime.sendMessage({
-              type: "search",
-              tweetText,
-              tweetUrl,
-            });
-          }
-        }
-      }
+    // Hack: skip replies
+    const isReply = tweet.textContent?.includes("Replying to");
+    if (isReply) continue;
 
-      if (node.nodeName === "DIV") {
-        node.ownerDocument
-          ?.querySelector(`div[aria-label="Timeline: Trending now"]`)
-          ?.remove();
-        node.ownerDocument
-          ?.querySelector(`aside[aria-label="Relevant people"]`)
-          ?.remove();
-        node.ownerDocument
-          ?.querySelector(`aside[aria-label="Who to follow"]`)
-          ?.remove();
-      }
+    const tweetLinks = tweet.querySelectorAll(`a[role="link"]`);
+    for (const link of tweetLinks) {
+      const href = link?.getAttribute("href");
+      const tweetUrl = href?.match(/\/\w+\/status\/\d+$/) ? href : null;
 
-      const tweets =
-        node.ownerDocument?.querySelectorAll('article[data-testid="tweet"]') ||
-        [];
+      // Skip if we've already saved this tweet
+      if (tweetUrl == null || savedTweetIds.has(tweetUrl)) continue;
+      savedTweetIds.add(tweetUrl);
 
-      for (const tweet of tweets) {
-        const tweetLinks = tweet.querySelectorAll(`a[role="link"]`);
-        for (const link of tweetLinks) {
-          const href = link?.getAttribute("href");
-
-          const tweetUrl = href?.match(/\/\w+\/status\/\d+$/) ? href : null;
-
-          if (tweetUrl == null || debouncer.has(tweetUrl)) {
-            continue;
-          }
-
-          const tweetText = tweet.querySelector(
-            '[data-testid="tweetText'
-          )?.textContent;
-
-          debouncer.set(tweetUrl, new Date());
-
-          const isReply = tweet.textContent?.includes("Replying to"); // hack
-          if (!isReply) {
-            browser.runtime.sendMessage({ type: "save", tweetText, tweetUrl });
-          }
-        }
-      }
+      browser.runtime.sendMessage({ type: "save", tweetText, tweetUrl });
     }
   }
 }

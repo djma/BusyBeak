@@ -40,6 +40,8 @@ export function tryExtractTweet(tweet: Element): {
       if (!href) continue;
       if (href.match(/\/\w+\/status\/\d+$/)) {
         tweetUrl = normalizeTweetUrl(href);
+      } else if (href.match(/\/\w+\/status\/\d+\/history$/)) {
+        tweetUrl = normalizeTweetUrl(href.replace(/\/history$/, ""));
       } else if (href.match(/\/\w+\/status\/\d+\/likes$/)) {
         likesStr = (link as HTMLAnchorElement).innerText.split(" ")[0].trim();
       } else if (href.match(/^\/\w+$/)) {

@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "npm run build-b && npm run build-c",
-    "build:watch": "esbuild --watch src/background.ts src/content_scripts.ts --bundle --outdir=dist --platform=browser",
-    "build-b": "esbuild src/background.ts --bundle --outdir=dist --platform=browser",
-    "build-c": "esbuild src/content_scripts.ts --bundle --outdir=dist --platform=browser"
+    "build": "esbuild src/*/index.ts --bundle --outdir=dist --platform=browser",
+    "watch": "esbuild src/*/index.ts --bundle --outdir=dist --platform=browser --watch"
   },
   "author": "",
   "license": "UNLICENSED",

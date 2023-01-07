@@ -72,7 +72,7 @@ async function popupSearch(message: MessageReq) {
   const vecs = (await findClosestK(embedding, 3)) as TweetVec[];
 
   for (const vec of vecs) {
-    console.log(`Related tweet: ${vec.id}`);
+    console.log(`Related tweet: ${vec.metadata.url}`);
   }
 
   const channel = new BroadcastChannel("POP_UP_CHANNEL");

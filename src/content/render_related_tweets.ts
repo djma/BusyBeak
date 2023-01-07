@@ -30,7 +30,7 @@ export function renderTweet(tweet: TweetVec): HTMLElement {
 
   const meta = tweet.metadata;
   const score = tweet.score.toFixed(3);
-  slug.innerText = `${score} @${meta.authorName} ${meta.likesStr}`;
+  slug.innerText = `${score} @${meta.authorName} ${meta.likesStr} ❤️`;
 
   const snippet = document.createElement("div");
   snippet.style.color = "rgb(231,233,234)";
@@ -47,7 +47,7 @@ export function renderTweet(tweet: TweetVec): HTMLElement {
   snippet.innerText = snip;
 
   const a = document.createElement("a");
-  a.href = tweet.id;
+  a.href = tweet.metadata.url;
   a.target = "_blank";
   a.style.textDecoration = "none";
   a.style.display = "block";

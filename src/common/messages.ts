@@ -32,6 +32,7 @@ export type TweetVec = {
 
 /** Tweet metadata. URL not included, used as the ID. */
 export type TweetMeta = {
+  url: string;
   text: string;
   date: string;
   authorName: string;
@@ -39,3 +40,14 @@ export type TweetMeta = {
   likesStr: string;
   isReply: boolean;
 };
+
+export async function sha1hex(str: string) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashHex = await crypto.subtle.digest("SHA-1", data).then((hash) => {
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  });
+  return hashHex;
+}

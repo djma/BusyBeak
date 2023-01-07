@@ -1,3 +1,4 @@
+import { sha1hex, TweetMeta } from "common/messages";
 import { PINECONE_BASE_URL, PINECONE_KEY } from "./config";
 
 /** A list of vectors from querying the vector DB. */
@@ -20,7 +21,8 @@ export interface PineconeVector {
   values: number[];
 }
 
-export async function loadVec(id: string): Promise<PineconeVector> {
+export async function loadVec(tweetMeta: TweetMeta): Promise<PineconeVector> {
+  const id = await sha1hex(tweetMeta.text);
   const url = `${PINECONE_BASE_URL}/vectors/fetch?ids=${encodeURIComponent(
     id
   )}`;
@@ -30,7 +32,12 @@ export async function loadVec(id: string): Promise<PineconeVector> {
   } = await fetch(url, {
     method: "GET",
     headers: { "Api-Key": PINECONE_KEY },
-  }).then((response) => response.json());
+  })
+    .then((response) => response.json())
+    .catch((err) => {
+      console.log("error: ", err);
+      return { vectors: {} };
+    });
   return storedEmbedding.vectors[id];
 }
 

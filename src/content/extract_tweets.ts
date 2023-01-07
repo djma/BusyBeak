@@ -12,7 +12,8 @@ export function extractAndSaveTweets() {
   for (const tweet of tweets) {
     const extracted = tryExtractTweet(tweet);
     if (extracted == null) continue;
-    const { tweetUrl, tweetMeta } = extracted;
+    const tweetMeta = extracted;
+    const tweetUrl = tweetMeta.url;
 
     // Skip if we've already saved this tweet
     if (tweetUrl == null || savedTweetIds.has(tweetUrl)) continue;
@@ -26,10 +27,7 @@ export function extractAndSaveTweets() {
   }
 }
 
-export function tryExtractTweet(tweet: Element): {
-  tweetUrl: string;
-  tweetMeta: TweetMeta;
-} | null {
+export function tryExtractTweet(tweet: Element): TweetMeta | null {
   const tweetText =
     tweet.querySelector('[data-testid="tweetText"]')?.textContent || "";
   try {
@@ -45,6 +43,7 @@ export function tryExtractTweet(tweet: Element): {
       } else if (href.match(/\/\w+\/status\/\d+\/likes$/)) {
         likesStr = (link as HTMLAnchorElement).innerText.split(" ")[0].trim();
       } else if (href.match(/^\/\w+$/)) {
+        if (authorName != null) continue; // only grab first @link. Subsequent ones are @mentions.
         authorName = href.split("/").slice(-1)[0];
         const linkText = (link as HTMLAnchorElement).innerText.trim();
         if (!linkText.startsWith("@")) {
@@ -79,9 +78,10 @@ export function tryExtractTweet(tweet: Element): {
       authorDisplayName,
       likesStr,
       isReply,
+      url: tweetUrl,
     };
 
-    return { tweetUrl, tweetMeta };
+    return tweetMeta;
   } catch (e) {
     console.error(`Error extracting tweet: ${tweetText}`, tweet);
     throw e;

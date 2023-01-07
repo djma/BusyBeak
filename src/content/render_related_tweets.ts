@@ -41,8 +41,8 @@ export function renderTweet(tweet: TweetVec): HTMLElement {
     .split("\n")
     .map((s) => s.trim())
     .join(" ");
-  if (snip.length > 100) {
-    snip = snip.substring(0, 100) + "…";
+  if (snip.length > 280) {
+    snip = snip.substring(0, 280) + "…";
   }
   snippet.innerText = snip;
 

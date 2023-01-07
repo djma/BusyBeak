@@ -1,4 +1,4 @@
-import { TweetMeta } from "../common/messages";
+import { sha1hex, TweetMeta } from "../common/messages";
 import { validateTweetUrl } from "../common/validate";
 import { OPENAI_KEY } from "./config";
 import { loadVec, saveVecs } from "./vector_search";
@@ -47,7 +47,7 @@ export async function saveTweetEmbed({
   validateTweetUrl(tweetUrl);
 
   // Check if we've already saved this tweet.
-  const vec = await loadVec(tweetUrl);
+  const vec = await loadVec(tweetMeta);
   if (vec != null) {
     console.log("Already have embedding for tweet: ", tweetUrl);
     return vec.values;
@@ -63,9 +63,11 @@ export async function saveTweetEmbed({
 
   // Save the embedding to Pinecone.
   console.log("Saving embedding to pinecone: ", tweetUrl);
+  const hashHex = await sha1hex(tweetMeta.text);
+
   const vectors = [
     {
-      id: tweetUrl,
+      id: hashHex,
       metadata: tweetMeta,
       values: embedding,
     },

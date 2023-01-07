@@ -69,7 +69,8 @@ async function handleNav() {
   lastTweetUrl = url;
 
   // Extract the text
-  const { tweetUrl, tweetMeta } = ensureNotNull(tryExtractTweet(topLevelTweet));
+  const tweetMeta = ensureNotNull(tryExtractTweet(topLevelTweet));
+  const tweetUrl = tweetMeta.url;
   ensure(url === tweetUrl, `URL mismatch ${url} ${tweetUrl}`);
   console.log(`Navigated to ${tweetUrl}`);
   if (tweetMeta.text == null || tweetMeta.text === "") return;

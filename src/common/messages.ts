@@ -9,6 +9,10 @@ export type MessageReq =
       type: "search-related";
       tweetUrl: string;
       tweetMeta: TweetMeta;
+    }
+  | {
+      type: "popup-search";
+      query: string;
     };
 
 /** Response from background process to tab. */

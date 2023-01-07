@@ -18,5 +18,10 @@
       "matches": ["*://*.twitter.com/*"],
       "js": ["dist/content/index.js"]
     }
-  ]
+  ],
+
+  "action": {
+    "default_icon": "icons/border-48.png",
+    "default_popup": "popup.html"
+  }
 }

@@ -48,7 +48,7 @@ function RelatedTweets({ tweets }: { tweets: TweetVec[] }) {
       {tweets.map((tweet) => (
         <div key={tweet.id}>
           <p>
-            <a href={tweet.id}>{tweet.metadata.authorDisplayName}</a>
+            <a href={tweet.metadata.url}>{tweet.metadata.authorDisplayName}</a>
           </p>
           <p>{tweet.metadata.text}</p>
         </div>

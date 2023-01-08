@@ -15,9 +15,11 @@ export interface PineconeScoreVector {
 
 /** A single vector. */
 export interface PineconeVector {
+  /** URI that references the content */
   id: string;
-  metadata: {};
+  /** Embedded vector of the content */
   values: number[];
+  metadata?: {};
 }
 
 export async function loadVec(id: string): Promise<PineconeVector> {

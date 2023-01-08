@@ -33,8 +33,23 @@ function App() {
     <div>
       <form onSubmit={handleSubmit}>
         <label>
-          Search:
-          <input type="text" name="query" />
+          <div>Search receipts:</div>
+          <textarea
+            name="query"
+            wrap="soft"
+            style={{
+              marginTop: "4px",
+              width: "100%",
+              maxHeight: "200px",
+            }}
+            onInput={(e) => {
+              // resize textarea
+              const textarea = e.currentTarget;
+              textarea.style.height = "";
+              textarea.style.height = textarea.scrollHeight + "px";
+            }}
+          />
+          <input type="submit" value="search" style={{ marginTop: "4px" }} />
         </label>
       </form>
       <RelatedTweets tweets={tweets} />
@@ -49,10 +64,11 @@ function RelatedTweets({ tweets }: { tweets: TweetVec[] }) {
         <div key={tweet.id}>
           <p>
             <a href={tweet.id} target="_blank">
-              {tweet.metadata.authorDisplayName}
+              @{tweet.metadata.authorName}
             </a>
+            <br />
+            {tweet.metadata.text}
           </p>
-          <p>{tweet.metadata.text}</p>
         </div>
       ))}
     </div>

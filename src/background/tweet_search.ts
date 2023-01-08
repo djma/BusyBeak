@@ -18,10 +18,10 @@ interface EmbeddingResponse {
   };
 }
 
-export async function getTweetEmbedding(
-  tweetText: string
+export async function getTextEmbedding(
+  text: string
 ): Promise<EmbeddingResponse> {
-  console.log("fetching tweet embedding for: ", tweetText.substring(0, 20));
+  console.log("fetching embedding for: ", text.substring(0, 60));
   const respJson = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
     headers: {
@@ -29,7 +29,7 @@ export async function getTweetEmbedding(
       Authorization: "Bearer " + OPENAI_KEY,
     },
     body: JSON.stringify({
-      input: tweetText,
+      input: text,
       model: "text-embedding-ada-002",
     }),
   }).then((response) => response.json());
@@ -54,7 +54,7 @@ export async function saveTweetEmbed({
   }
 
   // Otherwise, generate an embedding using the OpenAI API.
-  const embeddingResp = await getTweetEmbedding(tweetMeta.text);
+  const embeddingResp = await getTextEmbedding(tweetMeta.text);
   const embedding = embeddingResp.data[0].embedding;
   if (embedding.length !== 1536) {
     console.log("Expected float[1536], got: ", embeddingResp);

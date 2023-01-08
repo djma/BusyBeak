@@ -6,11 +6,9 @@ export interface PineconeResponse {
   namespace: string;
 }
 
-/** A single vector. Queries can optionally request values or just id,score. */
-export interface PineconeScoreVector {
-  id: string;
+/** A single vector. Queries can optionally request values and metadata or just id,score. */
+export interface PineconeScoreVector extends PineconeVector {
   score: number;
-  values?: number[];
 }
 
 /** A single vector. */
@@ -51,7 +49,7 @@ export async function findClosestK(
       },
       body: JSON.stringify({
         vector,
-        topK: k + 1, // first one is the query vector itself
+        topK: k,
         includeValues: false,
         includeMetadata: true,
       }),

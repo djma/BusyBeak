@@ -1,7 +1,7 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
 
 import { MessageReq, MessageRes, TweetVec } from "../common/messages";
-import { getTweetEmbedding, saveTweetEmbed } from "./tweet_search";
+import { getTextEmbedding, saveTweetEmbed } from "./tweet_search";
 import { findClosestK } from "./vector_search";
 import { ensure } from "../common/assert";
 
@@ -51,11 +51,9 @@ async function searchRelated(
 
   const embedding = await saveTweetEmbed(message);
   console.log("Looking up related tweets");
-  const vecs = (await findClosestK(embedding, 3)) as TweetVec[];
-  console.log("Closest K", vecs);
-
-  let filtered = vecs.filter((v) => !v.metadata.isReply);
-  if (filtered.length === 0) filtered = vecs;
+  const vecs = (await findClosestK(embedding, 3 + 1)) as TweetVec[]; // +1 to skip the original tweet
+  let filtered = vecs.filter((v) => v.id !== message.tweetUrl);
+  console.log("Closest K", filtered);
 
   sendResponse(sender.tab.id, {
     type: "related-tweets",
@@ -67,7 +65,7 @@ async function searchRelated(
 async function popupSearch(message: MessageReq) {
   ensure(message.type === "popup-search");
   const query = message.query;
-  const embedding = (await getTweetEmbedding(query)).data[0].embedding;
+  const embedding = (await getTextEmbedding(query)).data[0].embedding;
   console.log("Looking up closest tweet, len(embedding) = " + embedding.length);
   const vecs = (await findClosestK(embedding, 3)) as TweetVec[];
 
@@ -81,11 +79,4 @@ async function popupSearch(message: MessageReq) {
     tweetUrl: "",
     relatedTweets: vecs,
   });
-
-  // send message back to popup?
-  // browser.,{
-  //   type: "related-tweets",
-  //   tweetUrl: "",
-  //   relatedTweets: vecs,
-  // });
 }

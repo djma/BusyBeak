@@ -45,6 +45,7 @@ export function tryExtractTweet(tweet: Element): {
       } else if (href.match(/\/\w+\/status\/\d+\/likes$/)) {
         likesStr = (link as HTMLAnchorElement).innerText.split(" ")[0].trim();
       } else if (href.match(/^\/\w+$/)) {
+        if (authorName != null) continue; // First @ is the author. Others are @mentions.
         authorName = href.split("/").slice(-1)[0];
         const linkText = (link as HTMLAnchorElement).innerText.trim();
         if (!linkText.startsWith("@")) {

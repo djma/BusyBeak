@@ -1,6 +1,11 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
 
-import { MessageReq, MessageRes, TweetVec } from "../common/messages";
+import {
+  MessageReq,
+  MessageRes,
+  TweetMeta,
+  TweetVec,
+} from "../common/messages";
 import { getTweetEmbedding, saveTweetEmbed } from "./tweet_search";
 import { findClosestK } from "./vector_search";
 import { ensure } from "../common/assert";
@@ -13,11 +18,13 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
   try {
     switch (message.type) {
       case "save":
+        message.tweetMeta = new TweetMeta(message.tweetMeta);
         console.log("Saving tweet", message);
         await saveTweetEmbed(message);
         break;
 
       case "search-related":
+        message.tweetMeta = new TweetMeta(message.tweetMeta);
         console.log("Saving top tweet", message);
         await searchRelated(message, sender);
         break;

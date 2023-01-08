@@ -1,4 +1,4 @@
-import { sha1hex, TweetMeta } from "common/messages";
+import { ContentAddressable } from "common/messages";
 import { PINECONE_BASE_URL, PINECONE_KEY } from "./config";
 
 /** A list of vectors from querying the vector DB. */
@@ -21,8 +21,10 @@ export interface PineconeVector {
   values: number[];
 }
 
-export async function loadVec(tweetMeta: TweetMeta): Promise<PineconeVector> {
-  const id = await sha1hex(tweetMeta.text);
+export async function loadVec(
+  tweetMeta: ContentAddressable
+): Promise<PineconeVector> {
+  const id = await tweetMeta.digest();
   const url = `${PINECONE_BASE_URL}/vectors/fetch?ids=${encodeURIComponent(
     id
   )}`;

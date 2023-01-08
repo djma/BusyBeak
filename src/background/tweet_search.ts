@@ -1,4 +1,4 @@
-import { sha1hex, TweetMeta } from "../common/messages";
+import { ContentAddressable, sha1hex, TweetMeta } from "../common/messages";
 import { validateTweetUrl } from "../common/validate";
 import { OPENAI_KEY } from "./config";
 import { loadVec, saveVecs } from "./vector_search";
@@ -42,7 +42,7 @@ export async function saveTweetEmbed({
   tweetMeta,
 }: {
   tweetUrl: string;
-  tweetMeta: TweetMeta;
+  tweetMeta: ContentAddressable;
 }): Promise<number[]> {
   validateTweetUrl(tweetUrl);
 
@@ -54,7 +54,7 @@ export async function saveTweetEmbed({
   }
 
   // Otherwise, generate an embedding using the OpenAI API.
-  const embeddingResp = await getTweetEmbedding(tweetMeta.text);
+  const embeddingResp = await getTweetEmbedding(tweetMeta.preimage());
   const embedding = embeddingResp.data[0].embedding;
   if (embedding.length !== 1536) {
     console.log("Expected float[1536], got: ", embeddingResp);
@@ -63,11 +63,11 @@ export async function saveTweetEmbed({
 
   // Save the embedding to Pinecone.
   console.log("Saving embedding to pinecone: ", tweetUrl);
-  const hashHex = await sha1hex(tweetMeta.text);
+  const metaDigest = await tweetMeta.digest();
 
   const vectors = [
     {
-      id: hashHex,
+      id: metaDigest,
       metadata: tweetMeta,
       values: embedding,
     },

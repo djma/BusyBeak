@@ -71,7 +71,7 @@ export function tryExtractTweet(tweet: Element): TweetMeta | null {
 
     const isReply = tweet.textContent!.includes("Replying to");
 
-    const tweetMeta: TweetMeta = {
+    const tweetMeta = new TweetMeta({
       text: tweetText,
       date,
       authorName,
@@ -79,7 +79,7 @@ export function tryExtractTweet(tweet: Element): TweetMeta | null {
       likesStr,
       isReply,
       url: tweetUrl,
-    };
+    });
 
     return tweetMeta;
   } catch (e) {

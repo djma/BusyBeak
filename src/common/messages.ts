@@ -30,16 +30,57 @@ export type TweetVec = {
   values?: number[];
 };
 
+export interface ContentAddressable {
+  preimage(): string;
+  digest(): Promise<string>;
+}
+
 /** Tweet metadata. URL not included, used as the ID. */
-export type TweetMeta = {
-  url: string;
-  text: string;
-  date: string;
-  authorName: string;
-  authorDisplayName: string;
-  likesStr: string;
-  isReply: boolean;
-};
+export class TweetMeta implements ContentAddressable {
+  url!: string;
+  text!: string;
+  date!: string;
+  authorName!: string;
+  authorDisplayName!: string;
+  likesStr!: string;
+  isReply!: boolean;
+
+  // // what I really want is an easy way to create objects of this type without all the constructor boilerplate
+  // // I feel like I'm missing some typescript feature knowledge
+  constructor({
+    url,
+    text,
+    date,
+    authorName,
+    authorDisplayName,
+    likesStr,
+    isReply,
+  }: {
+    url: string;
+    text: string;
+    date: string;
+    authorName: string;
+    authorDisplayName: string;
+    likesStr: string;
+    isReply: boolean;
+  }) {
+    this.url = url;
+    this.text = text;
+    this.date = date;
+    this.authorName = authorName;
+    this.authorDisplayName = authorDisplayName;
+    this.likesStr = likesStr;
+    this.isReply = isReply;
+  }
+
+  public async digest(): Promise<string> {
+    return await sha1hex(this.text);
+  }
+
+  public preimage(): string {
+    return this.text;
+  }
+}
 
 export async function sha1hex(str: string) {
   const encoder = new TextEncoder();

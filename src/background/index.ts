@@ -1,7 +1,12 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
 
-import { MessageReq, MessageRes, TweetVec } from "../common/messages";
-import { getTextEmbedding, saveTweetEmbed } from "./tweet_search";
+import {
+  ItemTweet,
+  MessageReq,
+  MessageRes,
+  ResultVec,
+} from "../common/messages";
+import { getTextEmbeddings, embedAndSaveItems } from "./tweet_search";
 import { findClosestK } from "./vector_search";
 import { ensure } from "../common/assert";
 
@@ -13,8 +18,8 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
   try {
     switch (message.type) {
       case "save":
-        console.log("Saving tweet", message);
-        await saveTweetEmbed(message);
+        console.log("Saving tweets", message);
+        await embedAndSaveItems(message.items);
         break;
 
       case "search-related":
@@ -49,15 +54,15 @@ async function searchRelated(
 
   ensure(message.type === "search-related");
 
-  const embedding = await saveTweetEmbed(message);
+  const embedding = (await embedAndSaveItems([message.tweet]))[0];
   console.log("Looking up related tweets");
-  const vecs = (await findClosestK(embedding, 3 + 1)) as TweetVec[]; // +1 to skip the original tweet
-  let filtered = vecs.filter((v) => v.id !== message.tweetUrl);
+  const vecs = await findClosestK(embedding.values, 3 + 1); // +1 to skip the original tweet
+  let filtered = vecs.filter((v) => v.id !== message.tweet.url);
   console.log("Closest K", filtered);
 
   sendResponse(sender.tab.id, {
     type: "related-tweets",
-    tweetUrl: message.tweetUrl,
+    tweetUrl: message.tweet.url,
     relatedTweets: filtered,
   });
 }
@@ -65,9 +70,9 @@ async function searchRelated(
 async function popupSearch(message: MessageReq) {
   ensure(message.type === "popup-search");
   const query = message.query;
-  const embedding = (await getTextEmbedding(query)).data[0].embedding;
+  const embedding = (await getTextEmbeddings([query])).data[0].embedding;
   console.log("Looking up closest tweet, len(embedding) = " + embedding.length);
-  const vecs = (await findClosestK(embedding, 3)) as TweetVec[];
+  const vecs = (await findClosestK(embedding, 3)) as ResultVec<ItemTweet>[];
 
   for (const vec of vecs) {
     console.log(`Related tweet: ${vec.id}`);

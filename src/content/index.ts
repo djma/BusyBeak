@@ -1,6 +1,6 @@
 import { browser } from "webextension-polyfill-ts";
 import { ensure, ensureNotNull } from "../common/assert";
-import { MessageRes, TweetVec } from "../common/messages";
+import { ItemTweet, MessageRes, ResultVec } from "../common/messages";
 import { extractAndSaveTweets, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
 
@@ -10,6 +10,7 @@ console.log("Hello from content script");
 let lastUrl = ""; // Last URL we visited
 let lastTweetUrl = ""; // Last specific tweet we visited
 let lastRenderKey = ""; // Last time we rendered the sidebar.
+type TweetVec = ResultVec<ItemTweet>;
 let relatedTweets = [] as TweetVec[];
 
 browser.runtime.onMessage.addListener((message: MessageRes) => {
@@ -59,23 +60,23 @@ async function handleNav() {
   if (!url.match(/twitter\.com\/\w+\/status\/\d+$/)) return;
 
   // Wait for the tweet to load
-  const topLevelTweet = document.querySelector(
+  const topTweetElem = document.querySelector(
     `article[data-testid="tweet"][tabIndex="-1"]`
   );
-  if (topLevelTweet == null) return;
+  if (topTweetElem == null) return;
 
   // Record that we're on this tweet
   if (lastTweetUrl == url) return;
   lastTweetUrl = url;
 
   // Extract the text
-  const { tweetUrl, tweetMeta } = ensureNotNull(tryExtractTweet(topLevelTweet));
-  ensure(url === tweetUrl, `URL mismatch ${url} ${tweetUrl}`);
-  console.log(`Navigated to ${tweetUrl}`);
-  if (tweetMeta.text == null || tweetMeta.text === "") return;
+  const topTweet = ensureNotNull(tryExtractTweet(topTweetElem));
+  ensure(url === topTweet.url, `URL mismatch ${url} ${topTweet.url}`);
+  console.log(`Navigated to ${topTweet.url}`);
+  if (topTweet.text == null || topTweet.text === "") return;
 
   // Search for related tweets
-  browser.runtime.sendMessage({ type: "search-related", tweetUrl, tweetMeta });
+  browser.runtime.sendMessage({ type: "search-related", tweet: topTweet });
 }
 
 function showRelatedTweets(tweetUrl: string, relatedTweetVecs: TweetVec[]) {

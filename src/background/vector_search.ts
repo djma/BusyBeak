@@ -1,14 +1,10 @@
+import { Item, ResultVec } from "common/messages";
 import { PINECONE_BASE_URL, PINECONE_KEY } from "./config";
 
 /** A list of vectors from querying the vector DB. */
 export interface PineconeResponse {
-  matches: PineconeScoreVector[];
+  matches: ResultVec<Item>[];
   namespace: string;
-}
-
-/** A single vector. Queries can optionally request values and metadata or just id,score. */
-export interface PineconeScoreVector extends PineconeVector {
-  score: number;
 }
 
 /** A single vector. */
@@ -17,28 +13,27 @@ export interface PineconeVector {
   id: string;
   /** Embedded vector of the content */
   values: number[];
-  metadata?: {};
+  metadata?: any;
 }
 
-export async function loadVec(id: string): Promise<PineconeVector> {
-  const url = `${PINECONE_BASE_URL}/vectors/fetch?ids=${encodeURIComponent(
-    id
-  )}`;
-  console.log(`Fetching ${url}`);
+export async function loadVecs(ids: string[]): Promise<PineconeVector[]> {
+  const encIds = ids.map((id) => encodeURIComponent(id)).join(",");
+  const url = `${PINECONE_BASE_URL}/vectors/fetch?ids=${encIds}`;
+  console.log(`Fetching ${ids.length} vectors...`);
   const storedEmbedding: {
     vectors: Record<string, PineconeVector>;
   } = await fetch(url, {
     method: "GET",
     headers: { "Api-Key": PINECONE_KEY },
   }).then((response) => response.json());
-  return storedEmbedding.vectors[id];
+  return ids.map((id) => storedEmbedding.vectors[id]);
 }
 
 /** Finds the closest vectors to a given vector. */
 export async function findClosestK(
   vector: number[],
   k: number
-): Promise<PineconeScoreVector[]> {
+): Promise<ResultVec<Item>[]> {
   const closestTweets: PineconeResponse = await fetch(
     `${PINECONE_BASE_URL}/query`,
     {

@@ -2,13 +2,11 @@
 export type MessageReq =
   | {
       type: "save";
-      tweetUrl: string;
-      tweetMeta: TweetMeta;
+      items: Item[];
     }
   | {
       type: "search-related";
-      tweetUrl: string;
-      tweetMeta: TweetMeta;
+      tweet: ItemTweet;
     }
   | {
       type: "popup-search";
@@ -19,19 +17,27 @@ export type MessageReq =
 export type MessageRes = {
   type: "related-tweets";
   tweetUrl: string;
-  relatedTweets: TweetVec[];
+  relatedTweets: ResultVec<ItemTweet>[];
 };
 
-/** A single tweet result, optionally with the embedding vector. */
-export type TweetVec = {
+/** A single result, optionally with the embedding vector. */
+export type ResultVec<T extends Item> = {
   id: string;
   score: number;
-  metadata: TweetMeta;
+  metadata: T;
   values?: number[];
 };
 
-/** Tweet metadata. URL not included, used as the ID. */
-export type TweetMeta = {
+export type Item = ItemTweet;
+
+export type ItemTypeUrl = {
+  type: string;
+  url: string;
+};
+
+/** A single tweet */
+export type ItemTweet = ItemTypeUrl & {
+  type: "tweet";
   text: string;
   date: string;
   authorName: string;

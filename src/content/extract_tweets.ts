@@ -1,35 +1,35 @@
 import { browser } from "webextension-polyfill-ts";
 import { ensure } from "../common/assert";
-import { MessageReq, TweetMeta } from "../common/messages";
+import { ItemTweet, MessageReq } from "../common/messages";
 import { normalizeTweetUrl } from "../common/validate";
 
 const savedTweetIds = new Set<string>();
 
 export function extractAndSaveTweets() {
-  const tweets =
+  const tweetElems =
     document.querySelectorAll('article[data-testid="tweet"]') || [];
 
-  for (const tweet of tweets) {
-    const extracted = tryExtractTweet(tweet);
-    if (extracted == null) continue;
-    const { tweetUrl, tweetMeta } = extracted;
+  const tweetsToSave = [];
+  for (const elem of tweetElems) {
+    const tweet = tryExtractTweet(elem);
+    if (tweet == null) continue;
 
     // Skip if we've already saved this tweet
-    if (tweetUrl == null || savedTweetIds.has(tweetUrl)) continue;
-    savedTweetIds.add(tweetUrl);
+    if (tweet.url == null || savedTweetIds.has(tweet.url)) continue;
+    savedTweetIds.add(tweet.url);
 
     // Skip empty
-    if (tweetMeta.text == null || tweetMeta.text === "") continue;
+    if (tweet.text == null || tweet.text === "") continue;
 
-    console.log(`Saving tweet ${tweetUrl}`);
-    sendRequest({ type: "save", tweetUrl, tweetMeta });
+    tweetsToSave.push(tweet);
   }
+  if (tweetsToSave.length === 0) return;
+
+  console.log(`Saving ${tweetsToSave.length} tweets`);
+  sendRequest({ type: "save", items: tweetsToSave });
 }
 
-export function tryExtractTweet(tweet: Element): {
-  tweetUrl: string;
-  tweetMeta: TweetMeta;
-} | null {
+export function tryExtractTweet(tweet: Element): ItemTweet | null {
   const tweetText =
     tweet.querySelector('[data-testid="tweetText"]')?.textContent || "";
   try {
@@ -73,7 +73,9 @@ export function tryExtractTweet(tweet: Element): {
 
     const isReply = tweet.textContent!.includes("Replying to");
 
-    const tweetMeta: TweetMeta = {
+    return {
+      type: "tweet",
+      url: tweetUrl,
       text: tweetText,
       date,
       authorName,
@@ -81,8 +83,6 @@ export function tryExtractTweet(tweet: Element): {
       likesStr,
       isReply,
     };
-
-    return { tweetUrl, tweetMeta };
   } catch (e) {
     console.error(`Error extracting tweet: ${tweetText}`, tweet);
     throw e;

@@ -17,15 +17,21 @@ export interface PineconeVector {
 }
 
 export async function loadVecs(ids: string[]): Promise<PineconeVector[]> {
-  const encIds = ids.map((id) => encodeURIComponent(id)).join(",");
-  const url = `${PINECONE_BASE_URL}/vectors/fetch?ids=${encIds}`;
+  const query = ids.map((id) => "ids=" + encodeURIComponent(id)).join("&");
+  const url = `${PINECONE_BASE_URL}/vectors/fetch?${query}`;
   console.log(`Fetching ${ids.length} vectors...`);
-  const storedEmbedding: {
-    vectors: Record<string, PineconeVector>;
-  } = await fetch(url, {
+  const storedEmbeddingResp = await fetch(url, {
     method: "GET",
     headers: { "Api-Key": PINECONE_KEY },
-  }).then((response) => response.json());
+  });
+  if (!storedEmbeddingResp.ok) {
+    console.error("Error fetching vectors", storedEmbeddingResp);
+    console.error("Response text", await storedEmbeddingResp.text());
+    return [];
+  }
+  const storedEmbedding = (await storedEmbeddingResp.json()) as {
+    vectors: Record<string, PineconeVector>;
+  };
   return ids.map((id) => storedEmbedding.vectors[id]);
 }
 

@@ -4,12 +4,15 @@ import { ItemTweet, MessageReq } from "../common/messages";
 import { normalizeTweetUrl } from "../common/validate";
 
 const savedTweetIds = new Set<string>();
+let nextSaveId = 0;
+const tweetsToSave = [] as ItemTweet[];
 
+/** Extracts tweets from the timeline DOM. At most once every few seconds, sends
+ * a batch of them to the background proces to embed and save. */
 export function extractAndSaveTweets() {
   const tweetElems =
     document.querySelectorAll('article[data-testid="tweet"]') || [];
 
-  const tweetsToSave = [];
   for (const elem of tweetElems) {
     const tweet = tryExtractTweet(elem);
     if (tweet == null) continue;
@@ -21,12 +24,18 @@ export function extractAndSaveTweets() {
     // Skip empty
     if (tweet.text == null || tweet.text === "") continue;
 
+    console.log(`Queuing to save: ${tweet.url}`);
     tweetsToSave.push(tweet);
   }
   if (tweetsToSave.length === 0) return;
+  if (nextSaveId > 0) return;
 
-  console.log(`Saving ${tweetsToSave.length} tweets`);
-  sendRequest({ type: "save", items: tweetsToSave });
+  nextSaveId = window.setTimeout(() => {
+    console.log(`Saving ${tweetsToSave.length} tweets`);
+    sendRequest({ type: "save", items: tweetsToSave.slice() });
+    nextSaveId = 0;
+    tweetsToSave.length = 0;
+  }, 5000);
 }
 
 export function tryExtractTweet(tweet: Element): ItemTweet | null {

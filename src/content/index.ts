@@ -27,27 +27,23 @@ browser.runtime.onMessage.addListener((message: MessageRes) => {
   }
 });
 
-// Save tweets as we scroll the timeline
+/** Save tweets as we scroll the timeline */
 const observer = new MutationObserver(async (mutations) => {
   // Detect navigation; popstate, hashchange events etc are all unreliable.
   handleNav();
 
-  for (const mutation of mutations) {
-    await handleMutation(mutation);
-  }
+  const totalAdded = mutations.reduce((sum, m) => sum + m.addedNodes.length, 0);
+  if (totalAdded === 0) return;
+  extractAndSaveTweets();
+  maybeRenderSidebar();
 });
+
 observer.observe(document.body, {
   childList: true,
   subtree: true,
   attributes: true,
   characterData: true,
 });
-
-async function handleMutation(mutation: MutationRecord) {
-  if (mutation.addedNodes.length === 0) return;
-  extractAndSaveTweets();
-  maybeRenderSidebar();
-}
 
 async function handleNav() {
   const url = window.location.href;

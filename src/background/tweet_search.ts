@@ -46,6 +46,7 @@ export async function embedAndSaveItems(
 ): Promise<PineconeVector[]> {
   // Check if we've already saved some or all of them.
   const vecs = await loadVecs(items.map((item) => item.url));
+  console.log(`Loaded ${vecs.length} vectors`, vecs);
   const unsavedItems = items.filter((_, i) => vecs[i] == null);
   if (unsavedItems.length === 0) {
     console.log("All items already saved");

@@ -1,4 +1,6 @@
-import { TweetVec } from "../common/messages";
+import { ResultVec, ItemTweet } from "common/messages";
+
+type TweetVec = ResultVec<ItemTweet>;
 
 export function renderRelatedTweets(tweets: TweetVec[]): HTMLDivElement {
   const header = document.createElement("h2");

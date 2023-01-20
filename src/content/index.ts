@@ -3,11 +3,13 @@ import { ensure, ensureNotNull } from "../common/assert";
 import { ItemTweet, MessageRes, ResultVec } from "../common/messages";
 import { extractAndSaveTweets, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
+// import extractor from "unfluff";
 
 console.log("Hello from content script");
 
 // Whenever we navigate to a specific tweet, show similar tweets
 let lastUrl = ""; // Last URL we visited
+let lastUrlTime = Date.parse("2100-01-01"); // Last time we changed URL
 let lastTweetUrl = ""; // Last specific tweet we visited
 let lastRenderKey = ""; // Last time we rendered the sidebar.
 type TweetVec = ResultVec<ItemTweet>;
@@ -38,6 +40,8 @@ const observer = new MutationObserver(async (mutations) => {
   if (/^https:\/\/twitter.com\//.test(lastUrl)) {
     extractAndSaveTweets();
     maybeRenderSidebar();
+  } else {
+    await extractArticle();
   }
 });
 
@@ -53,6 +57,7 @@ async function handleNav() {
   if (url !== lastUrl) {
     console.log("New URL: ", url);
     lastUrl = url;
+    lastUrlTime = Date.now();
     maybeRenderSidebar();
   }
 
@@ -104,4 +109,14 @@ function renderSidebar(elem: Element) {
   } else {
     // On the timeline, leave the sidebar alone.
   }
+}
+
+/** Using https://github.com/ageitgey/node-unfluff, extracts articles from webpages. Last update was 4 years ago.
+ * There's a more recent but fewer stars https://github.com/extractus/article-extractor */
+async function extractArticle() {
+  browser.runtime.sendMessage({
+    type: "extract-article",
+    html: document.body.innerHTML,
+    url: lastUrl,
+  });
 }

@@ -11,6 +11,11 @@ export type MessageReq =
   | {
       type: "popup-search";
       query: string;
+    }
+  | {
+      type: "extract-article";
+      html: string;
+      url: string;
     };
 
 /** Response from background process to tab. */

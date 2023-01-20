@@ -1,4 +1,5 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
+import { extractFromHtml } from "@extractus/article-extractor";
 
 import {
   ItemTweet,
@@ -31,6 +32,10 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
         await popupSearch(message);
         break;
 
+      case "extract-article":
+        extractArticle(message.html, message.url);
+        break;
+
       default:
         console.error("Unknown message type", message);
     }
@@ -41,6 +46,20 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
 
 function sendResponse(tabId: number, message: MessageRes) {
   browser.tabs.sendMessage(tabId, message);
+}
+
+async function extractArticle(html: string, url: string) {
+  const data = await extractFromHtml(html, url);
+  // lastArticle = data;
+  console.log("Extracted article, length: ", data?.content?.length);
+  // // heuristic, wait for article to render for 5s before extracting
+  // if (lastUrlTime + 5000 > Date.now()) return;
+  // nextSaveId = window.setTimeout(() => {
+  //   console.log(`Saving ${tweetsToSave.length} tweets`);
+  //   sendRequest({ type: "save", items: tweetsToSave.slice() });
+  //   nextSaveId = 0;
+  //   tweetsToSave.length = 0;
+  // }, 5000);
 }
 
 async function searchRelated(

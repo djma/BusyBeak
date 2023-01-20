@@ -60,7 +60,7 @@ export async function findClosestK(
     console.error("Bad query response", closestTweets);
     return [];
   }
-  return closestTweets.matches.slice(1);
+  return closestTweets.matches;
 }
 
 export async function saveVecs(vectors: PineconeVector[]) {

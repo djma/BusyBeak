@@ -34,8 +34,11 @@ const observer = new MutationObserver(async (mutations) => {
 
   const totalAdded = mutations.reduce((sum, m) => sum + m.addedNodes.length, 0);
   if (totalAdded === 0) return;
-  extractAndSaveTweets();
-  maybeRenderSidebar();
+
+  if (/^https:\/\/twitter.com\//.test(lastUrl)) {
+    extractAndSaveTweets();
+    maybeRenderSidebar();
+  }
 });
 
 observer.observe(document.body, {

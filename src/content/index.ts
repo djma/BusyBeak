@@ -1,13 +1,16 @@
 import { browser } from "webextension-polyfill-ts";
 import { ensure, ensureNotNull } from "../common/assert";
-import { ItemTweet, MessageRes, ResultVec } from "../common/messages";
+import { Item, ItemTweet, MessageRes, ResultVec } from "../common/messages";
 import { extractAndSaveTweets, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
+// import extractor from "unfluff";
+import { extractFromHtml, ArticleData } from "@extractus/article-extractor";
 
 console.log("Hello from content script");
 
 // Whenever we navigate to a specific tweet, show similar tweets
 let lastUrl = ""; // Last URL we visited
+let lastUrlTime = Date.parse("2100-01-01"); // Last time we changed URL
 let lastTweetUrl = ""; // Last specific tweet we visited
 let lastRenderKey = ""; // Last time we rendered the sidebar.
 type TweetVec = ResultVec<ItemTweet>;
@@ -19,7 +22,10 @@ browser.runtime.onMessage.addListener((message: MessageRes) => {
   switch (message.type) {
     case "related-tweets":
       const { tweetUrl, relatedTweets } = message;
-      showRelatedTweets(tweetUrl, relatedTweets);
+      showRelatedTweets(
+        tweetUrl,
+        relatedTweets.filter((t) => t.metadata.type === "tweet") as TweetVec[] // todo fix typing
+      );
       break;
 
     default:
@@ -39,6 +45,35 @@ const observer = new MutationObserver(async (mutations) => {
     extractAndSaveTweets();
     maybeRenderSidebar();
   }
+  if (
+    // medium
+    /^https:\/\/medium\.com\//.test(lastUrl) ||
+    // wikipedia
+    /^https:\/\/en\.wikipedia\.org\//.test(lastUrl) ||
+    // substack
+    /^https:\/\/[^\.]+\.substack\.com\//.test(lastUrl) ||
+    // financial times
+    /^https:\/\/www\.ft\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.nytimes\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.washingtonpost\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.theguardian\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.bbc\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.cnn\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.foxnews\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.npr\.org\//.test(lastUrl) ||
+    /^https:\/\/www\.latimes\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.wsj\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.bloomberg\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.reuters\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.politico\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.huffpost\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.nbcnews\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.cnbc\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.abcnews\.go\.com\//.test(lastUrl) ||
+    /^https:\/\/www\.apnews\.com\//.test(lastUrl)
+  ) {
+    await extractArticle();
+  }
 });
 
 observer.observe(document.body, {
@@ -53,6 +88,7 @@ async function handleNav() {
   if (url !== lastUrl) {
     console.log("New URL: ", url);
     lastUrl = url;
+    lastUrlTime = Date.now();
     maybeRenderSidebar();
   }
 
@@ -104,4 +140,42 @@ function renderSidebar(elem: Element) {
   } else {
     // On the timeline, leave the sidebar alone.
   }
+}
+
+let nextSaveId = 0;
+let lastArticle: ArticleData | null = null;
+let hasNewArticle = false;
+/** Using https://github.com/ageitgey/node-unfluff, extracts articles from webpages. Last update was 4 years ago.
+ * There's a more recent but fewer stars https://github.com/extractus/article-extractor */
+async function extractArticle() {
+  const html = document.getElementsByTagName("html")[0].innerHTML;
+  // console.log(html.length, html.slice(0, 1000));
+  const article = await extractFromHtml(html, lastUrl);
+  if (!lastArticle || lastArticle.content !== article?.content) {
+    lastArticle = article;
+    console.log(
+      "Extracted article, content: ",
+      article?.content?.slice(0, 1000)
+    );
+    hasNewArticle = true;
+  }
+  // console.log(article);
+
+  if (!hasNewArticle) return;
+  if (!article) return;
+  if (!article.content) return;
+  if (article.content.length < 300) return;
+  if (nextSaveId > 0) return;
+
+  // heuristic, wait for article to render for 5s before extracting
+  nextSaveId = window.setTimeout(() => {
+    console.log(`Saving article of length ${article?.content?.length}`);
+    browser.runtime.sendMessage({
+      type: "save-article",
+      article: lastArticle,
+      url: lastUrl,
+    });
+    nextSaveId = 0;
+    hasNewArticle = false;
+  }, 5000);
 }

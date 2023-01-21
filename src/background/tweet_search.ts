@@ -1,5 +1,5 @@
 import { ensure } from "common/assert";
-import { Item } from "../common/messages";
+import { Item, ItemTweet } from "../common/messages";
 import { OPENAI_KEY } from "./config";
 import { loadVecs, PineconeVector, saveVecs } from "./vector_search";
 
@@ -42,10 +42,10 @@ export async function getTextEmbeddings(
 }
 
 export async function embedAndSaveItems(
-  items: Item[]
+  items: ItemTweet[]
 ): Promise<PineconeVector[]> {
   // Check if we've already saved some or all of them.
-  const vecs = await loadVecs(items.map((item) => item.url));
+  const vecs = await loadVecs(items.map((item) => item.url!));
   console.log(`Loaded ${vecs.length} vectors`, vecs);
   const unsavedItems = items.filter((_, i) => vecs[i] == null);
   if (unsavedItems.length === 0) {

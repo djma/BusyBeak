@@ -1,4 +1,4 @@
-import { ResultVec, ItemTweet } from "common/messages";
+import { ResultVec, ItemTweet, Item } from "common/messages";
 
 type TweetVec = ResultVec<ItemTweet>;
 

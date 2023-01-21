@@ -1,10 +1,10 @@
-import { ItemTweet, ResultVec } from "common/messages";
+import { Item, ResultVec } from "common/messages";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { browser } from "webextension-polyfill-ts";
 import "./index.css";
 
-type TweetVec = ResultVec<ItemTweet>;
+type TweetVec = ResultVec<Item>;
 
 const root = document.querySelector("#root")!;
 createRoot(root).render(<App />);
@@ -66,10 +66,14 @@ function RelatedTweets({ tweets }: { tweets: TweetVec[] }) {
         <div key={tweet.id}>
           <p>
             <a href={tweet.id} target="_blank">
-              @{tweet.metadata.authorName}
+              {tweet.metadata.type === "tweet" || tweet.metadata.type == null
+                ? "@" + tweet.metadata.authorName
+                : tweet.metadata.title}
             </a>
             <br />
-            {tweet.metadata.text}
+            {tweet.metadata.type === "tweet" || tweet.metadata.type == null
+              ? tweet.metadata.text
+              : tweet.metadata.description}
           </p>
         </div>
       ))}

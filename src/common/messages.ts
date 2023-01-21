@@ -1,3 +1,4 @@
+import { ArticleData } from "@extractus/article-extractor";
 /** Request from tab to background process. */
 export type MessageReq =
   | {
@@ -13,8 +14,8 @@ export type MessageReq =
       query: string;
     }
   | {
-      type: "extract-article";
-      html: string;
+      type: "save-article";
+      article: ArticleData;
       url: string;
     };
 
@@ -22,7 +23,7 @@ export type MessageReq =
 export type MessageRes = {
   type: "related-tweets";
   tweetUrl: string;
-  relatedTweets: ResultVec<ItemTweet>[];
+  relatedTweets: ResultVec<Item>[];
 };
 
 /** A single result, optionally with the embedding vector. */
@@ -49,4 +50,11 @@ export type ItemTweet = ItemTypeUrl & {
   authorDisplayName: string;
   likesStr: string;
   isReply: boolean;
+};
+
+export type ItemArticle = {
+  type: "article";
+  url: string;
+  title: string;
+  description: string;
 };

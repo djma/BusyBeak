@@ -1,10 +1,10 @@
-import { ItemTweet, ResultVec } from "common/messages";
+import { Item, ResultVec } from "common/messages";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { browser } from "webextension-polyfill-ts";
 import "./index.css";
 
-type TweetVec = ResultVec<ItemTweet>;
+type TweetVec = ResultVec<Item>;
 
 const root = document.querySelector("#root")!;
 createRoot(root).render(<App />);

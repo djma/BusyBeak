@@ -1,14 +1,9 @@
 import { browser, Runtime } from "webextension-polyfill-ts";
-import { extractFromHtml } from "@extractus/article-extractor";
+import { ArticleData } from "@extractus/article-extractor";
 
-import {
-  ItemTweet,
-  MessageReq,
-  MessageRes,
-  ResultVec,
-} from "../common/messages";
+import { Item, MessageReq, MessageRes, ResultVec } from "../common/messages";
 import { getTextEmbeddings, embedAndSaveItems } from "./tweet_search";
-import { findClosestK } from "./vector_search";
+import { findClosestK, loadVecs, saveVecs } from "./vector_search";
 import { ensure } from "../common/assert";
 
 console.log("Background hello world");
@@ -32,8 +27,8 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
         await popupSearch(message);
         break;
 
-      case "extract-article":
-        extractArticle(message.html, message.url);
+      case "save-article":
+        await embedAndSaveArticle(message.article, message.url);
         break;
 
       default:
@@ -46,20 +41,6 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
 
 function sendResponse(tabId: number, message: MessageRes) {
   browser.tabs.sendMessage(tabId, message);
-}
-
-async function extractArticle(html: string, url: string) {
-  const data = await extractFromHtml(html, url);
-  // lastArticle = data;
-  console.log("Extracted article, length: ", data?.content?.length);
-  // // heuristic, wait for article to render for 5s before extracting
-  // if (lastUrlTime + 5000 > Date.now()) return;
-  // nextSaveId = window.setTimeout(() => {
-  //   console.log(`Saving ${tweetsToSave.length} tweets`);
-  //   sendRequest({ type: "save", items: tweetsToSave.slice() });
-  //   nextSaveId = 0;
-  //   tweetsToSave.length = 0;
-  // }, 5000);
 }
 
 async function searchRelated(
@@ -91,7 +72,7 @@ async function popupSearch(message: MessageReq) {
   const query = message.query;
   const embedding = (await getTextEmbeddings([query])).data[0].embedding;
   console.log("Looking up closest tweet, len(embedding) = " + embedding.length);
-  const vecs = (await findClosestK(embedding, 3)) as ResultVec<ItemTweet>[];
+  const vecs = (await findClosestK(embedding, 3)) as ResultVec<Item>[];
 
   for (const vec of vecs) {
     console.log(`Related tweet: ${vec.id}`);
@@ -103,4 +84,51 @@ async function popupSearch(message: MessageReq) {
     tweetUrl: "",
     relatedTweets: vecs,
   });
+}
+
+async function embedAndSaveArticle(article: ArticleData, url: string) {
+  const cleanUrl = url.split("?")[0];
+  const vecs = await loadVecs([cleanUrl]);
+  if (vecs[0] != null) {
+    console.log("Already saved article", cleanUrl);
+    console.log(vecs);
+    return;
+  }
+
+  console.log("Saving article", cleanUrl);
+  const embeddingResp = await getTextEmbeddings([
+    // https://stackoverflow.com/questions/5002111/how-to-strip-html-tags-from-string-in-javascript
+    chopEmbeddingInput(article.content!.replace(/<\/?[^>]+(>|$)/g, "")),
+  ]);
+
+  const embeddings = embeddingResp.data.map((d) => d.embedding);
+
+  // Save the embedding to Pinecone.
+  console.log(`Saving ${embeddings.length} embeddings to Pinecone...`);
+  const vecsToSave = [
+    {
+      id: cleanUrl,
+      metadata: {
+        title: article.title,
+        description: article.description,
+        url: cleanUrl,
+        // content: article.content, // too big?
+        type: "article",
+      },
+      values: embeddings[0],
+    },
+  ];
+  await saveVecs(vecsToSave);
+}
+
+/** Hacky function to chop off the end of a string to make it fit in the GPT-3 encoder.  */
+function chopEmbeddingInput(text: string): string {
+  const maxTokens = 8191;
+
+  // Can't use encode/decode because the gpt-3-encoder requires fs and path.
+  // const encoded = encode(text);
+  // return decode(encoded.slice(0, maxTokens));
+
+  // 4-character heuristic from: https://beta.openai.com/tokenizer
+  return text.slice(0, maxTokens * 4 * 0.99);
 }

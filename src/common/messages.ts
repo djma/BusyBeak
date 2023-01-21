@@ -3,7 +3,7 @@ import { ArticleData } from "@extractus/article-extractor";
 export type MessageReq =
   | {
       type: "save";
-      items: Item[];
+      items: ItemTweet[];
     }
   | {
       type: "search-related";
@@ -34,7 +34,7 @@ export type ResultVec<T extends Item> = {
   values?: number[];
 };
 
-export type Item = ItemTweet;
+export type Item = ItemTweet | ItemArticle;
 
 export type ItemTypeUrl = {
   type: string;

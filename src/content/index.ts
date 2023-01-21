@@ -1,6 +1,6 @@
 import { browser } from "webextension-polyfill-ts";
 import { ensure, ensureNotNull } from "../common/assert";
-import { ItemTweet, MessageRes, ResultVec } from "../common/messages";
+import { Item, ItemTweet, MessageRes, ResultVec } from "../common/messages";
 import { extractAndSaveTweets, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
 // import extractor from "unfluff";
@@ -22,7 +22,10 @@ browser.runtime.onMessage.addListener((message: MessageRes) => {
   switch (message.type) {
     case "related-tweets":
       const { tweetUrl, relatedTweets } = message;
-      showRelatedTweets(tweetUrl, relatedTweets);
+      showRelatedTweets(
+        tweetUrl,
+        relatedTweets.filter((t) => t.metadata.type === "tweet") as TweetVec[] // todo fix typing
+      );
       break;
 
     default:

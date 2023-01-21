@@ -66,10 +66,14 @@ function RelatedTweets({ tweets }: { tweets: TweetVec[] }) {
         <div key={tweet.id}>
           <p>
             <a href={tweet.id} target="_blank">
-              @{tweet.metadata.authorName}
+              {tweet.metadata.type === "tweet" || tweet.metadata.type == null
+                ? "@" + tweet.metadata.authorName
+                : tweet.metadata.title}
             </a>
             <br />
-            {tweet.metadata.text}
+            {tweet.metadata.type === "tweet" || tweet.metadata.type == null
+              ? tweet.metadata.text
+              : tweet.metadata.description}
           </p>
         </div>
       ))}

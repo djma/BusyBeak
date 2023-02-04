@@ -24,6 +24,18 @@ export function extractAndSaveTweets() {
     // Skip empty
     if (tweet.text == null || tweet.text === "") continue;
 
+    // Skip short tweets
+    if (tweet.text.length < 20) {
+      console.log("Skipping short tweet: ", tweet.text);
+      continue;
+    }
+
+    // Skip replies
+    if (tweet.isReply) {
+      console.log("Skipping reply: ", tweet.text);
+      continue;
+    }
+
     console.log(`Queuing to save: ${tweet.url}`);
     tweetsToSave.push(tweet);
   }

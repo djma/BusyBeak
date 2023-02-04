@@ -54,6 +54,8 @@ const observer = new MutationObserver(async (mutations) => {
     /^https:\/\/[^\.]+\.substack\.com\//.test(lastUrl) ||
     // financial times
     /^https:\/\/www\.ft\.com\//.test(lastUrl) ||
+    // axios
+    /^https:\/\/www\.axios\.com\//.test(lastUrl) ||
     /^https:\/\/www\.nytimes\.com\//.test(lastUrl) ||
     /^https:\/\/www\.washingtonpost\.com\//.test(lastUrl) ||
     /^https:\/\/www\.theguardian\.com\//.test(lastUrl) ||

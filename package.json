@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "build": "esbuild src/*/index.ts* --bundle --outdir=dist --platform=browser",
-    "watch": "esbuild src/*/index.ts* --bundle --outdir=dist --platform=browser --watch"
+    "watch": "esbuild src/*/index.ts* --bundle --outdir=dist --platform=browser --watch",
+    "prisma-gen": "prisma generate; prisma generate --schema=./server/prisma/schema.prisma"
   },
   "author": "",
   "license": "UNLICENSED",
@@ -14,10 +15,12 @@
   "devDependencies": {
     "@types/react-dom": "^18.0.10",
     "esbuild": "^0.16.14",
+    "prisma": "^4.12.0",
     "typescript": "^4.9.4"
   },
   "dependencies": {
     "@extractus/article-extractor": "^7.2.8",
+    "@prisma/client": "^4.12.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "webextension-polyfill-ts": "^0.26.0"

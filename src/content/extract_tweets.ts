@@ -1,6 +1,5 @@
-import { browser } from "webextension-polyfill-ts";
 import { ensure } from "../common/assert";
-import { ItemTweet, MessageReq } from "../common/messages";
+import { ItemTweet, messageBackground } from "../common/messages";
 import { normalizeTweetUrl } from "../common/validate";
 
 const savedTweetIds = new Set<string>();
@@ -8,8 +7,8 @@ let nextSaveId = 0;
 const tweetsToSave = [] as ItemTweet[];
 
 /** Extracts tweets from the timeline DOM. At most once every few seconds, sends
- * a batch of them to the background proces to embed and save. */
-export function extractAndSaveTweets() {
+ * a batch of them to the background process to embed and save. */
+export function extractTweets() {
   const tweetElems =
     document.querySelectorAll('article[data-testid="tweet"]') || [];
 
@@ -44,17 +43,27 @@ export function extractAndSaveTweets() {
 
   nextSaveId = window.setTimeout(() => {
     console.log(`Saving ${tweetsToSave.length} tweets`);
-    sendRequest({ type: "save", items: tweetsToSave.slice() });
+    messageBackground({ type: "tweet", items: tweetsToSave.slice() });
     nextSaveId = 0;
     tweetsToSave.length = 0;
   }, 5000);
 }
 
 export function tryExtractTweet(tweet: Element): ItemTweet | null {
+  const authorDisplayName =
+    tweet.querySelector(`div[data-testid="User-Name"]`)?.children.item(0)
+      ?.textContent || "";
+  const authorName =
+    (tweet
+      .querySelector(`div[data-testid="User-Name"]`)
+      ?.children.item(1)
+      ?.textContent?.split("·")[0]
+      .trim()
+      .slice(1) as string) || "";
   const tweetText =
     tweet.querySelector('[data-testid="tweetText"]')?.textContent || "";
   try {
-    let tweetUrl, authorName, authorDisplayName, likesStr;
+    let tweetUrl, likesStr;
     const tweetLinks = tweet.querySelectorAll(`a[role="link"]`);
     for (const link of tweetLinks) {
       const href = link?.getAttribute("href");
@@ -67,10 +76,10 @@ export function tryExtractTweet(tweet: Element): ItemTweet | null {
         likesStr = (link as HTMLAnchorElement).innerText.split(" ")[0].trim();
       } else if (href.match(/^\/\w+$/)) {
         if (authorDisplayName != null) continue; // First @ is the author. Others are @mentions.
-        authorName = href.split("/").slice(-1)[0];
+        // authorName = href.split("/").slice(-1)[0];
         const linkText = (link as HTMLAnchorElement).innerText.trim();
         if (!linkText.startsWith("@")) {
-          authorDisplayName = linkText;
+          // authorDisplayName = linkText;
         }
       }
     }
@@ -108,8 +117,4 @@ export function tryExtractTweet(tweet: Element): ItemTweet | null {
     console.error(`Error extracting tweet: ${tweetText}`, tweet);
     throw e;
   }
-}
-
-function sendRequest(req: MessageReq) {
-  browser.runtime.sendMessage(req);
 }

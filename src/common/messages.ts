@@ -1,8 +1,18 @@
 import { ArticleData } from "@extractus/article-extractor";
+import { browser } from "webextension-polyfill-ts";
+
+export function messageBackground(req: MessageReq) {
+  browser.runtime.sendMessage(req);
+}
+
+export function messageTab(tabId: number, message: MessageRes) {
+  browser.tabs.sendMessage(tabId, message);
+}
+
 /** Request from tab to background process. */
 export type MessageReq =
   | {
-      type: "save";
+      type: "tweet";
       items: ItemTweet[];
     }
   | {

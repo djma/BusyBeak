@@ -1,0 +1,34 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://davidma@localhost:5432/ra"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model TwitterUser {
+  id           Int      @id @default(autoincrement())
+  twitterId    String   @unique
+  username     String
+  displayName  String
+  bio          String?
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  tweets       Tweet[] // one-to-many relationship with Tweet
+}
+
+model Tweet {
+  id        Int         @id @default(autoincrement())
+  twitterId String      @unique
+  content   String
+  date      DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+  authorId  Int
+  author    TwitterUser @relation(fields: [authorId], references: [id])
+}

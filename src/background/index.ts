@@ -1,10 +1,14 @@
-import { browser, Runtime } from "webextension-polyfill-ts";
 import { ArticleData } from "@extractus/article-extractor";
+import { browser, Runtime } from "webextension-polyfill-ts";
 
-import { Item, MessageReq, MessageRes, ResultVec } from "../common/messages";
-import { getTextEmbeddings, embedAndSaveItems } from "./tweet_search";
-import { findClosestK, loadVecs, saveVecs } from "./vector_search";
 import { ensure } from "../common/assert";
+import { Item, MessageReq, messageTab, ResultVec } from "../common/messages";
+import {
+  getTextEmbeddings,
+  getTweetEmbeddings,
+  handleTweets,
+} from "./tweet_search";
+import { findClosestK, loadVecs, saveVecs } from "./vector_search";
 
 console.log("Background hello world");
 
@@ -13,9 +17,9 @@ console.log("Background hello world");
 browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
   try {
     switch (message.type) {
-      case "save":
+      case "tweet":
         console.log("Saving tweets", message);
-        await embedAndSaveItems(message.items);
+        await handleTweets(message.items);
         break;
 
       case "search-related":
@@ -39,10 +43,6 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
   }
 });
 
-function sendResponse(tabId: number, message: MessageRes) {
-  browser.tabs.sendMessage(tabId, message);
-}
-
 async function searchRelated(
   message: MessageReq,
   sender: Runtime.MessageSender
@@ -54,13 +54,13 @@ async function searchRelated(
 
   ensure(message.type === "search-related");
 
-  const embedding = (await embedAndSaveItems([message.tweet]))[0];
+  const embedding = (await getTweetEmbeddings([message.tweet]))[0];
   console.log("Looking up related tweets");
   const vecs = await findClosestK(embedding.values, 3 + 1); // +1 to skip the original tweet
   let filtered = vecs.filter((v) => v.id !== message.tweet.url);
   console.log("Closest K", filtered);
 
-  sendResponse(sender.tab.id, {
+  messageTab(sender.tab.id, {
     type: "related-tweets",
     tweetUrl: message.tweet.url,
     relatedTweets: filtered,

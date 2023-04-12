@@ -14,3 +14,8 @@ npm run watch
 ```
 
 and click `Update` after every change.
+
+### Other dependencies
+
+Install postgres.
+Run the server between the extension and postgres: `cd server; npm run serve`

@@ -1,7 +1,8 @@
+import { Tweet, TwitterUser } from "@prisma/client";
 import { ensure } from "common/assert";
-import { Item, ItemTweet } from "../common/messages";
+import { ItemTweet } from "../common/messages";
 import { OPENAI_KEY } from "./config";
-import { loadVecs, PineconeVector, saveVecs } from "./vector_search";
+import { PineconeVector, loadVecs, saveVecs } from "./vector_search";
 
 /** A vector embedding for a single tweet. */
 interface EmbeddingResponse {
@@ -41,7 +42,13 @@ export async function getTextEmbeddings(
   return (await resp.json()) as EmbeddingResponse;
 }
 
-export async function embedAndSaveItems(
+/**
+ * @param items
+ * @returns embeddings for all items. If an item was already saved, it
+ * will be loaded from Pinecone. If it was not saved, it will embed them
+ * with OpenAI API and then save them to Pinecone.
+ */
+export async function getTweetEmbeddings(
   items: ItemTweet[]
 ): Promise<PineconeVector[]> {
   // Check if we've already saved some or all of them.
@@ -71,4 +78,48 @@ export async function embedAndSaveItems(
 
   let si = 0;
   return items.map((_, i) => vecs[i] ?? vecsToSave[si++]);
+}
+
+export async function handleTweets(items: ItemTweet[]) {
+  await storeTweets(items);
+  await getTweetEmbeddings(items);
+}
+
+async function storeTweets(items: ItemTweet[]) {
+  // Send tweets to database server.
+  for (const item of items) {
+    const twitterUser: Partial<TwitterUser> = {
+      twitterId: item.authorName,
+      username: item.authorName,
+      displayName: item.authorDisplayName,
+    };
+    const resp = await fetch("http://localhost:3000/api/TwitterUser/upsert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(twitterUser),
+    });
+    if (!resp.ok) {
+      console.error("Error storing twitter user", item, resp);
+    }
+    const user = await resp.json();
+
+    const tweet: Partial<Tweet> = {
+      twitterId: item.url,
+      content: item.text,
+      authorId: user.id,
+      date: new Date(item.date),
+    };
+    const tweetResp = await fetch("http://localhost:3000/api/Tweet/upsert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(tweet),
+    });
+    if (!tweetResp.ok) {
+      console.error("Error storing tweet", item, resp);
+    }
+  }
 }

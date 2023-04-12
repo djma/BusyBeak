@@ -1,7 +1,7 @@
 import { browser } from "webextension-polyfill-ts";
 import { ensure, ensureNotNull } from "../common/assert";
-import { Item, ItemTweet, MessageRes, ResultVec } from "../common/messages";
-import { extractAndSaveTweets, tryExtractTweet } from "./extract_tweets";
+import { ItemTweet, MessageRes, ResultVec } from "../common/messages";
+import { extractTweets, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
 // import extractor from "unfluff";
 import { extractFromHtml, ArticleData } from "@extractus/article-extractor";
@@ -42,7 +42,7 @@ const observer = new MutationObserver(async (mutations) => {
   if (totalAdded === 0) return;
 
   if (/^https:\/\/twitter.com\//.test(lastUrl)) {
-    extractAndSaveTweets();
+    extractTweets();
     maybeRenderSidebar();
   }
   if (

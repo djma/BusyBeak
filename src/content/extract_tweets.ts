@@ -30,10 +30,10 @@ export function extractTweets() {
     }
 
     // Skip replies
-    if (tweet.isReply) {
-      console.log("Skipping reply: ", tweet.text);
-      continue;
-    }
+    // if (tweet.isReply) {
+    //   console.log("Skipping reply: ", tweet.text);
+    //   continue;
+    // }
 
     console.log(`Queuing to save: ${tweet.url}`);
     tweetsToSave.push(tweet);

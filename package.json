@@ -5,7 +5,7 @@
   "scripts": {
     "build": "esbuild src/*/index.ts* --bundle --outdir=dist --platform=browser",
     "watch": "esbuild src/*/index.ts* --bundle --outdir=dist --platform=browser --watch",
-    "prisma-gen": "prisma generate; prisma generate --schema=./server/prisma/schema.prisma"
+    "prisma-gen": "prisma migrate dev && prisma generate && cp ./prisma/schema.prisma ./server/prisma/schema.prisma && prisma generate --schema=./server/prisma/schema.prisma"
   },
   "author": "",
   "license": "UNLICENSED",

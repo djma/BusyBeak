@@ -26,9 +26,31 @@ model Tweet {
   id        Int         @id @default(autoincrement())
   twitterId String      @unique
   content   String
+  contentEmbedding String? // Points to pinecone @map("embeddingId")
   date      DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @default(now()) @updatedAt
   authorId  Int
   author    TwitterUser @relation(fields: [authorId], references: [id])
+
+  @@index([contentEmbedding])
+  @@index([createdAt])
+}
+
+model Reflection {
+  id        Int      @id @default(autoincrement())
+  // type
+  content   String
+  contentEmbedding String? // Points to pinecone @map("embeddingId")
+  prompt    String
+  createdAt DateTime @default(now())
+
+  @@index([contentEmbedding])
+  @@index([createdAt])
+}
+
+model KvStore {
+  key          String    @id
+  value        String
+  lastModified DateTime  @updatedAt
 }

@@ -81,11 +81,17 @@ export async function getTweetEmbeddings(
 }
 
 export async function handleTweets(items: ItemTweet[]) {
-  await storeTweets(items);
-  await getTweetEmbeddings(items);
+  const embeds = await getTweetEmbeddings(items);
+  const itemsWithEmbedding = embeds.map((embed, i) => ({
+    ...items[i],
+    contentEmbedding: embed.id,
+  }));
+  await storeTweets(itemsWithEmbedding);
 }
 
-async function storeTweets(items: ItemTweet[]) {
+async function storeTweets(
+  items: (ItemTweet & { contentEmbedding: string })[]
+) {
   // Send tweets to database server.
   for (const item of items) {
     const twitterUser: Partial<TwitterUser> = {
@@ -110,6 +116,7 @@ async function storeTweets(items: ItemTweet[]) {
       content: item.text,
       authorId: user.id,
       date: new Date(item.date),
+      contentEmbedding: item.contentEmbedding,
     };
     const tweetResp = await fetch("http://localhost:3000/api/Tweet/upsert", {
       method: "POST",

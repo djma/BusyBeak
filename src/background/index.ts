@@ -35,6 +35,10 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
         await embedAndSaveArticle(message.article, message.url);
         break;
 
+      case "tweet-summary":
+        await handleTweetSummary();
+        break;
+
       default:
         console.error("Unknown message type", message);
     }
@@ -42,6 +46,25 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
     console.error(e);
   }
 });
+
+async function handleTweetSummary() {
+  const resp = await fetch(
+    "http://localhost:3000/api/Reflection/getTweetSummary",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  const json = await resp.json();
+  console.log("Got tweet summary", json);
+  const channel = new BroadcastChannel("POP_UP_CHANNEL");
+  channel.postMessage({
+    type: "tweet-summary",
+    tweetSummary: json,
+  });
+}
 
 async function searchRelated(
   message: MessageReq,

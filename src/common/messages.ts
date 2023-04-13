@@ -27,6 +27,9 @@ export type MessageReq =
       type: "save-article";
       article: ArticleData;
       url: string;
+    }
+  | {
+      type: "tweet-summary";
     };
 
 /** Response from background process to tab. */

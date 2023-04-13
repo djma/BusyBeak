@@ -1,5 +1,6 @@
 import { PrismaClient, Tweet, TwitterUser } from "@prisma/client";
 import express, { Request, Response } from "express";
+import reflect from "./reflect";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -45,18 +46,36 @@ app.post("/api/Tweet/upsert", async (req: Request, res: Response) => {
       content: item.content,
       authorId: item.authorId,
       date: item.date,
+      contentEmbedding: item.contentEmbedding,
     },
     create: {
       twitterId: item.twitterId!,
       content: item.content!,
       authorId: item.authorId!,
       date: item.date,
+      contentEmbedding: item.contentEmbedding,
     },
   });
   res.status(201).json({ message: "Tweet created" });
 });
 
+// API route to get tweet summary
+app.post(
+  "/api/Reflection/getTweetSummary",
+  async (req: Request, res: Response) => {
+    console.log("Getting tweet summary");
+    const reflection = await prisma.reflection.findFirst({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    res.status(201).json(reflection);
+  }
+);
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+reflect();

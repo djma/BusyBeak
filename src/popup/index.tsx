@@ -1,3 +1,4 @@
+import { Reflection } from "@prisma/client";
 import { Item, ResultVec } from "common/messages";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -16,23 +17,47 @@ function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
   browser.runtime.sendMessage({ type: "popup-search", query });
 }
 
+function convertToLinesWithBreaks(text: string) {
+  return text
+    .split("\n")
+    .flatMap((line, index) => [index > 0 ? <br key={index} /> : null, line]);
+}
+
 function App() {
   const [tweets, setTweets] = useState<TweetVec[]>([]);
+  const [summary, setSummary] = useState<string | null | undefined>(null);
 
   const channel = new BroadcastChannel("POP_UP_CHANNEL");
   channel.onmessage = (msg) => {
-    const decoded = msg.data as {
-      type: "related-tweets";
-      relatedTweets: TweetVec[];
-    };
+    if (msg.data.type === "related-tweets") {
+      const decoded = msg.data as {
+        type: "related-tweets";
+        relatedTweets: TweetVec[];
+      };
 
-    console.log("received", decoded.relatedTweets);
+      console.log("received", decoded.relatedTweets);
 
-    setTweets(decoded.relatedTweets);
+      setTweets(decoded.relatedTweets);
+    } else if (msg.data.type === "tweet-summary") {
+      const decoded = msg.data as {
+        type: "tweet-summary";
+        tweetSummary: Reflection | null;
+      };
+      setSummary(decoded.tweetSummary?.content);
+    }
   };
+
+  // Send a message to the background script and request data
+  browser.runtime.sendMessage({ type: "tweet-summary" });
 
   return (
     <div>
+      {summary && summary.length > 0 && (
+        <div>
+          <h3>Today's summary</h3>
+          <p>{convertToLinesWithBreaks(summary)}</p>
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <label>
           <div>Search receipts:</div>

@@ -84,10 +84,11 @@ async function reflect() {
     modelName: "gpt-3.5-turbo",
   });
 
-  const prompt = `The following is a set of tweets in chronological order that appeared in my timeline.
+  const prompt = `The following is a set of tweets in chronological order that appeared in my timeline today.
 I generally follow cryptocurrency and AI topics, so those are of particular interest to me.
 Your goal is to find themes and theses of the day by inferring what people are talking about.
-Make sure to group your summary by topic. Do not jump around. When the summary is longer than a page, summarize it down.
+Group your summary by topic, in bulletpoint format. In each group, order the points by descending importance.
+When the summary is longer than a page, summarize further or throw away the least interesting bits.
 
 Here is your running summary of your understanding from the previous tweets:
 ${lastReflectionContent}

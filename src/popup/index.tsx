@@ -60,7 +60,7 @@ function App() {
       )}
       <form onSubmit={handleSubmit}>
         <label>
-          <div>Search receipts:</div>
+          <div>Search tweets:</div>
           <textarea
             name="query"
             wrap="soft"

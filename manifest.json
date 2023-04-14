@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "The Receipts",
+  "name": "BusyBeak",
   "version": "1.0",
-  "description": "Remember what you see. Always bring receipts.",
+  "description": "Squaaaaawk!",
 
   "icons": {
     "48": "icons/border-48.png"

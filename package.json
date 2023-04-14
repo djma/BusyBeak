@@ -1,5 +1,5 @@
 {
-  "name": "the-receipts",
+  "name": "BusyBeak",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -9,9 +9,9 @@
   },
   "author": "",
   "license": "UNLICENSED",
-  "repository": "https://github.com/djma/the-receipts",
-  "bugs": "https://github.com/djma/the-receipts/issues",
-  "homepage": "https://github.com/djma/the-receipts#readme",
+  "repository": "https://github.com/djma/BusyBeak",
+  "bugs": "https://github.com/djma/BusyBeak/issues",
+  "homepage": "https://github.com/djma/BusyBeak#readme",
   "devDependencies": {
     "@types/react-dom": "^18.0.10",
     "esbuild": "^0.16.14",

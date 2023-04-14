@@ -1,5 +1,4 @@
 import { Item, ResultVec } from "common/messages";
-import { PINECONE_BASE_URL, PINECONE_KEY } from "./config";
 
 /** A list of vectors from querying the vector DB. */
 export interface PineconeResponse {
@@ -18,11 +17,12 @@ export interface PineconeVector {
 
 export async function loadVecs(ids: string[]): Promise<PineconeVector[]> {
   const query = ids.map((id) => "ids=" + encodeURIComponent(id)).join("&");
-  const url = `${PINECONE_BASE_URL}/vectors/fetch?${query}`;
+  const url = `${process.env.PINECONE_BASE_URL}/vectors/fetch?${query}`;
+  console.log(url);
   console.log(`Fetching ${ids.length} vectors...`);
   const storedEmbeddingResp = await fetch(url, {
     method: "GET",
-    headers: { "Api-Key": PINECONE_KEY },
+    headers: { "Api-Key": process.env.PINECONE_KEY! },
   });
   if (!storedEmbeddingResp.ok) {
     console.error("Error fetching vectors", storedEmbeddingResp);
@@ -41,12 +41,12 @@ export async function findClosestK(
   k: number
 ): Promise<ResultVec<Item>[]> {
   const closestTweets: PineconeResponse = await fetch(
-    `${PINECONE_BASE_URL}/query`,
+    `${process.env.PINECONE_BASE_URL}/query`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Api-Key": PINECONE_KEY,
+        "Api-Key": process.env.PINECONE_KEY!,
       },
       body: JSON.stringify({
         vector,
@@ -65,11 +65,11 @@ export async function findClosestK(
 
 export async function saveVecs(vectors: PineconeVector[]) {
   const upsert = { vectors };
-  const resp = await fetch(`${PINECONE_BASE_URL}/vectors/upsert`, {
+  const resp = await fetch(`${process.env.PINECONE_BASE_URL}/vectors/upsert`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Api-Key": PINECONE_KEY,
+      "Api-Key": process.env.PINECONE_KEY!,
     },
     body: JSON.stringify(upsert),
   }).catch((err) => console.log("error: ", err));

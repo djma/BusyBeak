@@ -1,7 +1,6 @@
 import { Tweet, TwitterUser } from "@prisma/client";
 import { ensure } from "common/assert";
 import { ItemTweet } from "../common/messages";
-import { OPENAI_KEY } from "./config";
 import { PineconeVector, loadVecs, saveVecs } from "./vector_search";
 
 /** A vector embedding for a single tweet. */
@@ -28,7 +27,7 @@ export async function getTextEmbeddings(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + OPENAI_KEY,
+      Authorization: "Bearer " + process.env.OPENAI_KEY,
     },
     body: JSON.stringify({
       input: texts,

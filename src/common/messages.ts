@@ -63,6 +63,7 @@ export type ItemTweet = ItemTypeUrl & {
   authorDisplayName: string;
   likesStr: string;
   isReply: boolean;
+  replyToUrl?: string;
 };
 
 export type ItemArticle = {

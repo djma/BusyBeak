@@ -8,13 +8,47 @@ const tweetsToSave = [] as ItemTweet[];
 
 /** Extracts tweets from the timeline DOM. At most once every few seconds, sends
  * a batch of them to the background process to embed and save. */
-export function extractTweets() {
-  const tweetElems =
-    document.querySelectorAll('article[data-testid="tweet"]') || [];
+export function extractTweets(url: string) {
+  /** Is the browser focused on a particular tweet */
+  const isTweetFocus = url.match(/twitter\.com\/\w+\/status\/\d+$/);
 
-  for (const elem of tweetElems) {
-    const tweet = tryExtractTweet(elem);
+  const cellInnerDivs =
+    document.querySelectorAll('div[data-testid="cellInnerDiv"]') || [];
+
+  let isNextTweetReply = false;
+  const tweets = [];
+  for (const elem of cellInnerDivs) {
+    if ((elem as HTMLAnchorElement).innerText === "Show replies") {
+      isNextTweetReply = false;
+      continue;
+    } else if ((elem as HTMLAnchorElement).innerText === "Show this thread") {
+      isNextTweetReply = false;
+    }
+
+    const tweetElem = elem.querySelector('article[data-testid="tweet"]');
+
+    if (tweetElem == null) continue;
+    const tweet = tryExtractTweet(tweetElem);
     if (tweet == null) continue;
+
+    // add a replyToID
+    if (isNextTweetReply) {
+      tweet.replyToUrl = tweets[tweets.length - 1].url;
+      isNextTweetReply = false;
+    } else if (isTweetFocus && tweets.length > 0) {
+      tweet.replyToUrl = tweets[0].url;
+    }
+
+    tweets.push(tweet);
+
+    // if this tweet contains a div with offsetWidth == 2, the next tweet is a reply
+    const tweetDivs = tweetElem.querySelectorAll("div");
+    for (const div of tweetDivs) {
+      if (div.offsetWidth === 2) {
+        isNextTweetReply = true;
+        break;
+      }
+    }
 
     // Skip if we've already saved this tweet
     if (tweet.url == null || savedTweetIds.has(tweet.url)) continue;
@@ -47,6 +81,27 @@ export function extractTweets() {
     nextSaveId = 0;
     tweetsToSave.length = 0;
   }, 5000);
+}
+
+export function removeAds() {
+  const adElems = document.querySelectorAll('div[data-testid="cellInnerDiv"]');
+  for (const elem of adElems) {
+    const arrowSvg =
+      '<g><path d="M19.498 3h-15c-1.381 0-2.5 1.12-2.5 2.5v13c0 1.38 1.119 2.5 2.5 2.5h15c1.381 0 2.5-1.12 2.5-2.5v-13c0-1.38-1.119-2.5-2.5-2.5zm-3.502 12h-2v-3.59l-5.293 5.3-1.414-1.42L12.581 10H8.996V8h7v7z"></path></g>';
+    if (
+      [...elem.querySelectorAll("svg")].some(
+        (svg) => svg.innerHTML === arrowSvg
+      ) &&
+      [...elem.querySelectorAll("div")].some(
+        (div) => div.innerText?.indexOf("Promoted") > -1
+      )
+    ) {
+      // If you try to remove the whole div, twitter will say "something went wrong".
+      elem
+        .querySelectorAll('div[data-testid="placementTracking"]')
+        ?.forEach((div) => div.remove());
+    }
+  }
 }
 
 export function tryExtractTweet(tweet: Element): ItemTweet | null {
@@ -84,6 +139,7 @@ export function tryExtractTweet(tweet: Element): ItemTweet | null {
       }
     }
     if (tweetUrl == null) {
+      console.log("Missing tweet URL", tweet);
       // Element was not actually a tweet. Twitter DOM is ugly.
       return null;
     }

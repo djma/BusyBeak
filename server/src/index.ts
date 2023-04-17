@@ -47,6 +47,7 @@ app.post("/api/Tweet/upsert", async (req: Request, res: Response) => {
       authorId: item.authorId,
       date: item.date,
       contentEmbedding: item.contentEmbedding,
+      replyToTid: item.replyToTid,
     },
     create: {
       twitterId: item.twitterId!,
@@ -54,6 +55,7 @@ app.post("/api/Tweet/upsert", async (req: Request, res: Response) => {
       authorId: item.authorId!,
       date: item.date,
       contentEmbedding: item.contentEmbedding,
+      replyToTid: item.replyToTid,
     },
   });
   res.status(201).json({ message: "Tweet created" });

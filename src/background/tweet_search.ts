@@ -116,6 +116,7 @@ async function storeTweets(
       authorId: user.id,
       date: new Date(item.date),
       contentEmbedding: item.contentEmbedding,
+      replyToTid: item.replyToUrl,
     };
     const tweetResp = await fetch("http://localhost:3000/api/Tweet/upsert", {
       method: "POST",

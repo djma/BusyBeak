@@ -32,9 +32,11 @@ model Tweet {
   updatedAt DateTime    @default(now()) @updatedAt
   authorId  Int
   author    TwitterUser @relation(fields: [authorId], references: [id])
+  replyToTid String? // Points to pinecone @map("replyToTid")
 
-  @@index([contentEmbedding])
+  // @@index([contentEmbedding]) // probably not needed
   @@index([createdAt])
+  @@index([twitterId])
 }
 
 model Reflection {

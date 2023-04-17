@@ -1,10 +1,10 @@
 import { browser } from "webextension-polyfill-ts";
 import { ensure, ensureNotNull } from "../common/assert";
 import { ItemTweet, MessageRes, ResultVec } from "../common/messages";
-import { extractTweets, tryExtractTweet } from "./extract_tweets";
+import { extractTweets, removeAds, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
 // import extractor from "unfluff";
-import { extractFromHtml, ArticleData } from "@extractus/article-extractor";
+import { ArticleData, extractFromHtml } from "@extractus/article-extractor";
 
 console.log("Hello from content script");
 
@@ -36,15 +36,25 @@ browser.runtime.onMessage.addListener((message: MessageRes) => {
 /** Save tweets as we scroll the timeline */
 const observer = new MutationObserver(async (mutations) => {
   // Detect navigation; popstate, hashchange events etc are all unreliable.
-  handleNav();
+  const url = window.location.href;
+  if (url !== lastUrl) {
+    console.log("New URL: ", url);
+    lastUrl = url;
+    lastUrlTime = Date.now();
+  }
 
   const totalAdded = mutations.reduce((sum, m) => sum + m.addedNodes.length, 0);
   if (totalAdded === 0) return;
 
-  if (/^https:\/\/twitter.com\//.test(lastUrl)) {
-    extractTweets();
-    maybeRenderSidebar();
+  if (url.match(/twitter\.com\/\w+\/status\/\d+$/)) {
+    handleTweetFocus(lastUrl);
   }
+
+  if (/^https:\/\/twitter.com\//.test(lastUrl)) {
+    removeAds();
+    extractTweets(lastUrl);
+  }
+
   if (
     // medium
     /^https:\/\/medium\.com\//.test(lastUrl) ||
@@ -85,17 +95,8 @@ observer.observe(document.body, {
   characterData: true,
 });
 
-async function handleNav() {
-  const url = window.location.href;
-  if (url !== lastUrl) {
-    console.log("New URL: ", url);
-    lastUrl = url;
-    lastUrlTime = Date.now();
-    maybeRenderSidebar();
-  }
-
-  if (!url.match(/twitter\.com\/\w+\/status\/\d+$/)) return;
-
+async function handleTweetFocus(url: string) {
+  console.log(`handleTweetFocus(${url})`);
   // Wait for the tweet to load
   const topTweetElem = document.querySelector(
     `article[data-testid="tweet"][tabIndex="-1"]`

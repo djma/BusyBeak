@@ -1,5 +1,4 @@
 import { OpenAI } from "langchain/llms/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 import { PrismaClient } from "@prisma/client";
 import * as dotenv from "dotenv";
@@ -58,11 +57,9 @@ async function reflect() {
     }
 
     tweetsBlock += `${t.author.twitterId}: ${t.content.replaceAll("\n", " ")}`;
+    tweetsBlock += "\n";
     tweetsBlockLastCreatedAt = t.createdAt;
   }
-
-  const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 3000 });
-  const docs = await textSplitter.createDocuments([tweetsBlock]);
 
   const lastReflection = await prisma.reflection.findFirst({
     where: {
@@ -94,7 +91,7 @@ Here is your running summary of your understanding from the previous tweets:
 ${lastReflectionContent}
 
 Here are the next tweets:
-${docs[0].pageContent}
+${tweetsBlock}
 
 Update the summary to reflect your refined understanding. Carry over any information you think you will need.
 `;

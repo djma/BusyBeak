@@ -37,7 +37,8 @@ export function handleDiscordChannel(lastUrl: string) {
     }
 
     const timestamp = msg.querySelector("time")?.getAttribute("datetime")!;
-    const content = msg.querySelector("div[id*=message-content-")?.textContent!;
+    const content = msg.querySelector("div[id*=message-content-" + messageId)
+      ?.textContent!;
 
     const replyToMsgId = msg
       .querySelector("div[id*=message-reply-context-")

@@ -16,6 +16,10 @@ export type MessageReq =
       items: ItemTweet[];
     }
   | {
+      type: "save-discord-msgs";
+      items: DiscordMsg[];
+    }
+  | {
       type: "search-related";
       tweet: ItemTweet;
     }
@@ -31,6 +35,20 @@ export type MessageReq =
   | {
       type: "tweet-summary";
     };
+
+export interface DiscordUser {
+  userId: string;
+  username: string;
+}
+export interface DiscordMsg {
+  serverId: string;
+  channelId: string;
+  messageId: string;
+  replyToMsgId?: string;
+  user: DiscordUser;
+  timestamp: string;
+  content: string;
+}
 
 /** Response from background process to tab. */
 export type MessageRes = {

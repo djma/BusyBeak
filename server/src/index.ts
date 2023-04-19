@@ -1,4 +1,10 @@
-import { PrismaClient, Tweet, TwitterUser } from "@prisma/client";
+import {
+  DiscordMessage,
+  DiscordUser,
+  PrismaClient,
+  Tweet,
+  TwitterUser,
+} from "@prisma/client";
 import express, { Request, Response } from "express";
 import reflect from "./reflect";
 
@@ -74,6 +80,61 @@ app.post(
     res.status(201).json(reflection);
   }
 );
+
+// API route to create a discord user
+app.post("/api/DiscordUser/upsert", async (req: Request, res: Response) => {
+  console.log("Creating discord user", req.body);
+  const item: Partial<DiscordUser> = req.body;
+  const discordUser = await prisma.discordUser.upsert({
+    where: {
+      discordId: item.discordId,
+    },
+    update: {
+      username: item.username,
+      displayName: item.displayName,
+    },
+    create: {
+      discordId: item.discordId!,
+      username: item.username!,
+      displayName: item.displayName!,
+    },
+    select: {
+      id: true,
+    },
+  });
+  res.status(201).json(discordUser);
+});
+
+// API route to create a discord message
+app.post("/api/DiscordMessage/upsert", async (req: Request, res: Response) => {
+  console.log("Creating discord message", req.body);
+  const item: Partial<DiscordMessage> = req.body;
+  await prisma.discordMessage.upsert({
+    where: {
+      serverId_channelId_discordId: {
+        serverId: item.serverId!,
+        channelId: item.channelId!,
+        discordId: item.discordId!,
+      },
+    },
+    update: {
+      content: item.content,
+      authorId: item.authorId,
+      date: item.date,
+      replyToDid: item.replyToDid,
+    },
+    create: {
+      serverId: item.serverId!,
+      channelId: item.channelId!,
+      discordId: item.discordId!,
+      content: item.content!,
+      authorId: item.authorId!,
+      date: item.date!,
+      replyToDid: item.replyToDid,
+    },
+  });
+  res.status(201).json({ message: "Discord message created" });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

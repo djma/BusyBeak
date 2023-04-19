@@ -1,8 +1,15 @@
 import { ArticleData } from "@extractus/article-extractor";
 import { browser, Runtime } from "webextension-polyfill-ts";
 
+import { DiscordMessage, DiscordUser } from "@prisma/client";
 import { ensure } from "../common/assert";
-import { Item, MessageReq, messageTab, ResultVec } from "../common/messages";
+import {
+  DiscordMsg,
+  Item,
+  MessageReq,
+  messageTab,
+  ResultVec,
+} from "../common/messages";
 import {
   getTextEmbeddings,
   getTweetEmbeddings,
@@ -37,6 +44,10 @@ browser.runtime.onMessage.addListener(async (message: MessageReq, sender) => {
 
       case "tweet-summary":
         await handleTweetSummary();
+        break;
+
+      case "save-discord-msgs":
+        await saveDiscordMsgs(message.items);
         break;
 
       default:
@@ -154,4 +165,49 @@ function chopEmbeddingInput(text: string): string {
 
   // 4-character heuristic from: https://beta.openai.com/tokenizer
   return text.slice(0, maxTokens * 4 * 0.99);
+}
+
+async function saveDiscordMsgs(items: DiscordMsg[]) {
+  // Send discord msgs to database server.
+  for (const item of items) {
+    const discordUser: Partial<DiscordUser> = {
+      discordId: item.user.userId,
+      username: item.user.username,
+      displayName: item.user.username,
+    };
+    const resp = await fetch("http://localhost:3000/api/DiscordUser/upsert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(discordUser),
+    });
+    if (!resp.ok) {
+      console.error("Error storing discord user", item, resp);
+    }
+    const user = await resp.json();
+
+    const msg: Partial<DiscordMessage> = {
+      serverId: item.serverId,
+      channelId: item.channelId,
+      discordId: item.messageId,
+      date: new Date(item.timestamp),
+      authorId: user.id,
+      content: item.content,
+      replyToDid: item.replyToMsgId,
+    };
+    const tweetResp = await fetch(
+      "http://localhost:3000/api/DiscordMessage/upsert",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msg),
+      }
+    );
+    if (!tweetResp.ok) {
+      console.error("Error storing tweet", item, resp);
+    }
+  }
 }

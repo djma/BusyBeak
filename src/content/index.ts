@@ -5,6 +5,7 @@ import { extractTweets, removeAds, tryExtractTweet } from "./extract_tweets";
 import { renderRelatedTweets } from "./render_related_tweets";
 // import extractor from "unfluff";
 import { ArticleData, extractFromHtml } from "@extractus/article-extractor";
+import { handleDiscordChannel } from "./handleDiscordChannel";
 
 console.log("Hello from content script");
 
@@ -53,6 +54,10 @@ const observer = new MutationObserver(async (mutations) => {
   if (/^https:\/\/twitter.com\//.test(lastUrl)) {
     removeAds();
     extractTweets(lastUrl);
+  }
+
+  if (/^https:\/\/discord\.com\/channels\/\d+\/\d+/.test(lastUrl)) {
+    handleDiscordChannel(lastUrl);
   }
 
   if (

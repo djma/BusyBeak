@@ -39,6 +39,33 @@ model Tweet {
   @@index([twitterId])
 }
 
+model DiscordUser {
+  id           Int      @id @default(autoincrement())
+  discordId    String   @unique
+  username     String
+  displayName  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  messages     DiscordMessage[]
+}
+
+model DiscordMessage {
+  id        Int         @id @default(autoincrement())
+  serverId  String
+  channelId String
+  discordId String      @unique
+  replyToDid String?
+  authorId  Int
+  author    DiscordUser @relation(fields: [authorId], references: [id])
+  content   String
+  date      DateTime
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+
+  @@unique([serverId, channelId, discordId])
+  @@index([date])
+}
+
 model Reflection {
   id        Int      @id @default(autoincrement())
   // type

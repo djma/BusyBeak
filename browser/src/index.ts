@@ -30,6 +30,9 @@ async function goToChannelAndScrollUp(page: Page, channelName: string) {
   await page
     .getByRole("link", { name: `${channelName} (text channel)` })
     .click();
+  await page
+    .getByRole("link", { name: `${channelName} (text channel)` })
+    .press("End");
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
   for (let i = 0; i < 2; i++) {
